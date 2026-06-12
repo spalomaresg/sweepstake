@@ -17,12 +17,27 @@ def load_valid_emails():
     result = {}
     try:
         with open(VALID_EMAILS_PATH, newline='', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
+            # Leemos una pequeña muestra del archivo para analizarla
+            sample = f.read(2048)
+            f.seek(0) # Volvemos a poner el puntero al principio del archivo
+            
+            # Intentamos detectar el delimitador automáticamente
+            try:
+                dialect = csv.Sniffer().sniff(sample, delimiters=[',', ';'])
+                delimiter_found = dialect.delimiter
+            except csv.Error:
+                # Si el archivo tiene solo una línea o el "olfateador" duda,
+                # usamos la coma como valor por defecto seguro
+                delimiter_found = ','
+
+            # Pasamos el delimitador dinámico al DictReader
+            reader = csv.DictReader(f, delimiter=delimiter_found)
             for row in reader:
                 email = row.get('email', '').strip().lower()
                 code = row.get('invite_code', '').strip()
                 if email:
                     result[email] = code
+                    
     except FileNotFoundError:
         pass  # If file missing, no one can register (fail safe)
     return result
