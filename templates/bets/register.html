@@ -1,0 +1,84 @@
+{% extends 'bets/base.html' %}
+{% block title %}Register — ThreatFabric World Cup 2026{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+  <div class="glass rounded-2xl p-8">
+    <h1 class="font-display text-4xl text-emerald-400 mb-1 text-center">REGISTER</h1>
+    <p class="text-center text-white/40 text-sm mb-7">You need an invite email and code to register.</p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{{ field.label }}</label>
+        {% if field.name == 'team' %}
+          {# Render team as styled radio cards instead of a plain select #}
+          <div class="grid grid-cols-1 gap-2" id="team-cards">
+            {% for choice_val, choice_label in field.field.choices %}
+              {% if choice_val %}
+              <label class="team-card flex items-center gap-3 px-4 py-3 rounded-lg border border-white/10 cursor-pointer hover:border-white/30 transition has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10">
+                <input type="radio" name="{{ field.html_name }}" value="{{ choice_val }}"
+                  class="sr-only" {% if field.value == choice_val|stringformat:"s" %}checked{% endif %}>
+                <span class="w-3 h-3 rounded-full shrink-0" id="dot-{{ choice_val }}"></span>
+                <span class="text-sm text-white/80">{{ choice_label }}</span>
+              </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {# Hidden fallback select for form submission — kept in sync by JS #}
+          <div class="hidden">{{ field }}</div>
+        {% else %}
+          {{ field }}
+          {% if field.name == 'email' %}
+            <p class="text-white/30 text-xs mt-1">Must match your invite email exactly.</p>
+          {% endif %}
+        {% endif %}
+        {% if field.errors %}<p class="text-red-400 text-xs mt-1">{{ field.errors|join:", " }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">
+        Create account
+      </button>
+    </form>
+    <p class="text-center text-white/40 text-sm mt-5">Already have an account?
+      <a href="{% url 'login' %}" class="text-emerald-400 hover:underline">Sign in</a></p>
+  </div>
+</div>
+
+<script>
+// Team colours indexed by PK — injected from Django choices
+const teamColors = {};
+document.querySelectorAll('#team-cards .team-card').forEach(card => {
+  const radio = card.querySelector('input[type=radio]');
+  // We'll fetch the colour via a data attribute set below
+});
+</script>
+
+{# Inject team colours via a small inline script #}
+<script>
+const TEAM_COLORS = {
+  {% for bt in sweepstake_teams %}
+  "{{ bt.id }}": "{{ bt.color }}"{% if not forloop.last %},{% endif %}
+  {% endfor %}
+};
+document.querySelectorAll('#team-cards .team-card').forEach(card => {
+  const radio = card.querySelector('input[type=radio]');
+  const dot   = card.querySelector('span.rounded-full');
+  const color = TEAM_COLORS[radio.value];
+  if (color && dot) dot.style.background = color;
+});
+
+// Keep hidden select in sync with radio cards
+document.querySelectorAll('#team-cards input[type=radio]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const sel = document.querySelector('select[name="{{ form.team.html_name }}"]');
+    if (sel) sel.value = radio.value;
+  });
+});
+// Init hidden select to already-checked radio (e.g. on validation error)
+const checked = document.querySelector('#team-cards input[type=radio]:checked');
+if (checked) {
+  const sel = document.querySelector('select[name="{{ form.team.html_name }}"]');
+  if (sel) sel.value = checked.value;
+}
+</script>
+{% endblock %}

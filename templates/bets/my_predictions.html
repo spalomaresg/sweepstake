@@ -1,0 +1,420 @@
+{% extends 'bets/base.html' %}
+{% load bet_extras %}
+{% block title %}My Predictions — ThreatFabric World Cup 2026{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-8">
+  <h1 class="font-display text-5xl text-emerald-400">MY BETS</h1>
+  <div class="glass rounded-xl px-6 py-3 text-center">
+    <div class="text-white/40 text-xs uppercase tracking-wider">Total points</div>
+    <div class="font-display text-4xl text-emerald-400">{{ total_points }}</div>
+  </div>
+</div>
+
+<!-- Phase tabs -->
+<div class="flex flex-wrap gap-2 mb-6">
+  {% for phase in phases_data %}
+  <button onclick="showPhase('{{ phase.key }}')" id="tab-{{ phase.key }}"
+    class="px-4 py-2 rounded-lg text-sm font-semibold transition {% if phase.key == active_phase_key %}bg-emerald-500 text-white{% else %}glass text-white/60 hover:text-white{% endif %}">
+    {{ phase.label }}
+  </button>
+  {% endfor %}
+</div>
+
+{% for phase in phases_data %}
+<div id="panel-{{ phase.key }}" {% if phase.key != active_phase_key %}class="hidden"{% endif %}>
+
+  <!-- Scoring banner -->
+  <div class="mb-4 px-5 py-3 rounded-xl bg-white/5 border border-white/10 flex flex-wrap gap-4 text-sm text-white/60 items-center">
+    <span class="font-semibold text-white/80">{{ phase.label }} scoring:</span>
+    <span>🎯 Correct winner = <strong class="text-emerald-400">{{ phase.points_winner }} pt{% if phase.points_winner != 1 %}s{% endif %}</strong></span>
+    {% if phase.points_exact %}<span>🔢 Exact score = <strong class="text-yellow-400">{{ phase.points_exact }} pts</strong></span>{% endif %}
+    {% if not phase.is_bettable %}
+      {% if phase.is_complete %}<span class="ml-auto text-white/30 text-xs italic">🔒 Locked</span>
+      {% else %}<span class="ml-auto text-white/30 text-xs italic">🔒 Not open yet</span>{% endif %}
+    {% endif %}
+  </div>
+
+  {% if not phase.has_matches %}
+  <!-- No matches yet — phase is open but bracket not decided -->
+  <div class="glass rounded-2xl px-6 py-12 text-center text-white/40">
+    <div class="text-4xl mb-3">🏗️</div>
+    <div class="font-semibold text-white/60 mb-1">The bracket is being assembled…</div>
+    <div class="text-sm">Our admin is working hard filling in the fixtures. Check back soon — and start thinking about your picks!</div>
+  </div>
+
+  {% else %}
+  <!-- Table -->
+  <div class="glass rounded-2xl overflow-hidden">
+    <div class="grid grid-cols-[1fr_2.4fr_1fr_5rem] border-b border-white/10 text-white/30 text-xs uppercase tracking-wider px-5 py-3 gap-4">
+      <div>Match</div>
+      <div>Prediction</div>
+      <div>Result</div>
+      <div class="text-right">Pts</div>
+    </div>
+
+    {% for row in phase.rows %}
+    {% with match=row.match bet=row.bet locked=row.locked %}
+    <div class="{% if not forloop.last %}border-b border-white/5{% endif %} grid grid-cols-[1fr_2.4fr_1fr_5rem] gap-4 px-5 py-4 items-start hover:bg-white/[0.03] transition"
+      id="match-row-{{ match.id }}"
+      data-match-id="{{ match.id }}"
+      data-kickoff="{{ match.kickoff.isoformat }}"
+      data-finished="{% if match.finished %}true{% else %}false{% endif %}"
+      data-allows-score="{% if phase.allows_score %}true{% else %}false{% endif %}"
+      data-is-bettable="{% if phase.is_bettable %}true{% else %}false{% endif %}">
+
+      <!-- Match: date/time/group only -->
+      <div class="pt-1">
+        <div class="text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
+        {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">Group {{ match.home_team.group }}</div>{% endif %}
+
+      </div>
+
+      <!-- Prediction + final result underneath -->
+      <div class="space-y-2">
+        {% if not phase.allows_score %}
+          {# ── GROUP STAGE: 3 pill buttons ──────────── #}
+          <div class="flex items-center gap-2 flex-wrap">
+            <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'home')"{% endif %}
+              id="btn-home-{{ match.id }}"
+              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition
+                {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold
+                {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
+              {{ match.home_team.flag }} {{ match.home_team.name }}
+            </button>
+            <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'draw')"{% endif %}
+              id="btn-draw-{{ match.id }}"
+              class="w-20 text-center px-3 py-2 rounded-lg border text-sm transition
+                {% if bet and bet.predicted_winner == 'draw' %}bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold
+                {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
+              Draw
+            </button>
+            <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'away')"{% endif %}
+              id="btn-away-{{ match.id }}"
+              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition
+                {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold
+                {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
+              {{ match.away_team.flag }} {{ match.away_team.name }}
+            </button>
+
+            <div id="status-{{ match.id }}" class="text-xs hidden w-full mt-0.5"></div>
+          </div>
+
+        {% else %}
+          {# ── KNOCKOUT: score inputs + auto-winner ─── #}
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="btn-home-{{ match.id }}"
+              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition cursor-default
+                {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
+              {{ match.home_team.flag }} {{ match.home_team.name }}
+            </button>
+            {% if not locked and phase.is_bettable %}
+              <input type="number" min="0" max="20" id="hg-{{ match.id }}"
+                value="{% if bet and bet.predicted_home_goals is not None %}{{ bet.predicted_home_goals }}{% endif %}"
+                oninput="onScore({{ match.id }})"
+                class="w-12 px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+              <span class="text-white/30 font-mono">–</span>
+              <input type="number" min="0" max="20" id="ag-{{ match.id }}"
+                value="{% if bet and bet.predicted_away_goals is not None %}{{ bet.predicted_away_goals }}{% endif %}"
+                oninput="onScore({{ match.id }})"
+                class="w-12 px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+            {% else %}
+              <span class="text-white/50 font-mono text-sm px-1">
+                {% if bet and bet.predicted_home_goals is not None %}{{ bet.predicted_home_goals }}–{{ bet.predicted_away_goals }}{% else %}—{% endif %}
+              </span>
+            {% endif %}
+            <button id="btn-away-{{ match.id }}"
+              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition cursor-default
+                {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
+              {{ match.away_team.flag }} {{ match.away_team.name }}
+            </button>
+
+          </div>
+          {% if not locked and phase.is_bettable %}
+          <div id="draw-picker-{{ match.id }}" class="hidden text-xs text-yellow-400/80 text-center w-full mt-1">Who wins on penalties? Select manually.</div>
+          {% endif %}
+          <div id="status-{{ match.id }}" class="text-xs hidden"></div>
+        {% endif %}
+
+      </div>
+
+      <!-- Result column: winner flag+name and score -->
+      <div class="pt-1">
+        {% if match.finished %}
+          {% if match.winner == 'home' %}
+            <div class="text-sm font-semibold {% if bet and bet.predicted_winner == 'home' %}text-emerald-400{% else %}text-white/70{% endif %}">
+              {{ match.home_team.flag }} {{ match.home_team.name }}
+            </div>
+          {% elif match.winner == 'away' %}
+            <div class="text-sm font-semibold {% if bet and bet.predicted_winner == 'away' %}text-emerald-400{% else %}text-white/70{% endif %}">
+              {{ match.away_team.flag }} {{ match.away_team.name }}
+            </div>
+          {% else %}
+            <div class="text-sm font-semibold text-white/70">Draw</div>
+          {% endif %}
+          <div class="text-xs text-white/40 font-mono mt-0.5">{{ match.home_goals }}–{{ match.away_goals }}{% if match.knockout_winner and match.home_goals == match.away_goals %} (pens){% endif %}</div>
+        {% else %}
+          <span class="text-white/20 text-xs">—</span>
+        {% endif %}
+      </div>
+
+      <!-- Points -->
+      <div class="text-right pt-1">
+        {% if match.finished and bet %}
+          <span class="font-display text-2xl {% if bet.points_earned > 0 %}text-emerald-400{% else %}text-red-400{% endif %}">+{{ bet.points_earned }}</span>
+        {% else %}
+          <span class="text-white/20 text-sm">—</span>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% endif %}{# has_matches #}
+</div>
+{% endfor %}
+
+<script>
+const SAVE_URL = "{% url 'save_prediction_ajax' 0 %}".replace('/0/', '/MATCH_ID/');
+const CSRF = '{{ csrf_token }}';
+function saveUrl(id) { return SAVE_URL.replace('MATCH_ID', id); }
+const koWinner = {};
+
+function showStatus(id, msg, ok) {
+  const el = document.getElementById('status-' + id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'text-xs ' + (ok ? 'text-emerald-400' : 'text-red-400');
+  el.classList.remove('hidden');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add('hidden'), 2500);
+}
+
+async function postBet(matchId, payload) {
+  try {
+    const r = await fetch(saveUrl(matchId), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    showStatus(matchId, d.ok ? '✓ Saved' : (d.error || 'Error'), d.ok);
+  } catch { showStatus(matchId, 'Network error', false); }
+}
+
+// ── Group stage ────────────────────────────────────────────────────────────
+function selectGroup(matchId, winner) {
+  ['home','draw','away'].forEach(opt => {
+    const btn = document.getElementById('btn-' + opt + '-' + matchId);
+    if (!btn) return;
+    btn.className = btn.className
+      .replace(/bg-\S+\/20\s*/g,'').replace(/border-\S+\/50\s*/g,'')
+      .replace(/text-emerald-300\s*/g,'').replace(/text-blue-300\s*/g,'')
+      .replace(/font-semibold\s*/g,'').replace(/hover:border-white\/30\s*/g,'')
+      .replace(/hover:text-white\s*/g,'').trim();
+    const active = opt === winner;
+    if (active) {
+      btn.className += opt === 'draw'
+        ? ' bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
+        : ' bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold';
+    } else {
+      btn.className += ' border-white/10 text-white/50 hover:border-white/30 hover:text-white cursor-pointer';
+    }
+  });
+  postBet(matchId, {predicted_winner: winner});
+}
+
+// ── Knockout ───────────────────────────────────────────────────────────────
+function onScore(matchId) {
+  const hgEl = document.getElementById('hg-' + matchId);
+  const agEl = document.getElementById('ag-' + matchId);
+  if (!hgEl || !agEl) return;
+  const hg = hgEl.value === '' ? null : parseInt(hgEl.value);
+  const ag = agEl.value === '' ? null : parseInt(agEl.value);
+  if (hg === null || ag === null || isNaN(hg) || isNaN(ag)) return;
+
+  const dp = document.getElementById('draw-picker-' + matchId);
+
+  if (hg > ag) {
+    koWinner[matchId] = 'home';
+    if (dp) dp.classList.add('hidden');
+    updateKOButtons(matchId);
+    autoSaveKO(matchId);
+  } else if (ag > hg) {
+    koWinner[matchId] = 'away';
+    if (dp) dp.classList.add('hidden');
+    updateKOButtons(matchId);
+    autoSaveKO(matchId);
+  } else {
+    // Equal score — clear auto-winner, show penalty picker
+    // Do NOT auto-save; wait for user to manually pick the penalty winner
+    koWinner[matchId] = null;
+    updateKOButtons(matchId);
+    if (dp) dp.classList.remove('hidden');
+  }
+}
+
+function setKOWinner(matchId, winner) {
+  koWinner[matchId] = winner;
+  updateKOButtons(matchId);
+  const dp = document.getElementById('draw-picker-' + matchId);
+  if (dp) dp.classList.add('hidden');
+  autoSaveKO(matchId);
+}
+
+function updateKOButtons(matchId) {
+  const winner = koWinner[matchId];
+  ['home','away'].forEach(side => {
+    const btn = document.getElementById('btn-' + side + '-' + matchId);
+    if (!btn) return;
+    btn.className = btn.className
+      .replace(/bg-emerald-500\/20\s*/g,'').replace(/border-emerald-500\/50\s*/g,'')
+      .replace(/\btext-white\b\s*font-semibold/g,'').replace(/\btext-white\/40\b\s*/g,'').trim();
+    btn.className += winner === side
+      ? ' bg-emerald-500/20 border-emerald-500/50 text-white font-semibold'
+      : ' border-white/10 text-white/40';
+  });
+}
+
+function autoSaveKO(matchId) {
+  const winner = koWinner[matchId];
+  if (!winner) return;
+  const hg = document.getElementById('hg-' + matchId)?.value;
+  const ag = document.getElementById('ag-' + matchId)?.value;
+  if (!hg || !ag) return;
+  postBet(matchId, {predicted_winner: winner,
+    predicted_home_goals: parseInt(hg), predicted_away_goals: parseInt(ag)});
+}
+
+function setupKOButtons(matchId) {
+  ['home','away'].forEach(side => {
+    const btn = document.getElementById('btn-' + side + '-' + matchId);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const hg = parseInt(document.getElementById('hg-' + matchId)?.value);
+      const ag = parseInt(document.getElementById('ag-' + matchId)?.value);
+      if (!isNaN(hg) && !isNaN(ag) && hg === ag) setKOWinner(matchId, side);
+    });
+  });
+}
+
+// ── Phase tabs ─────────────────────────────────────────────────────────────
+const phases = [{% for p in phases_data %}'{{ p.key }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+function showPhase(key) {
+  phases.forEach(k => {
+    document.getElementById('panel-' + k).classList.toggle('hidden', k !== key);
+    document.getElementById('tab-' + k).className =
+      'px-4 py-2 rounded-lg text-sm font-semibold transition ' +
+      (k === key ? 'bg-emerald-500 text-white' : 'glass text-white/60 hover:text-white');
+  });
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[id^="hg-"]').forEach(el => {
+    const matchId = el.id.replace('hg-','');
+    setupKOButtons(matchId);
+    const hg = el.value === '' ? null : parseInt(el.value);
+    const agEl = document.getElementById('ag-' + matchId);
+    const ag = agEl?.value === '' ? null : parseInt(agEl?.value);
+    if (hg !== null && ag !== null && !isNaN(hg) && !isNaN(ag)) {
+      if (hg > ag) koWinner[matchId] = 'home';
+      else if (ag > hg) koWinner[matchId] = 'away';
+      else {
+        ['home','away'].forEach(s => {
+          const b = document.getElementById('btn-' + s + '-' + matchId);
+          if (b && b.className.includes('bg-emerald-500/20')) koWinner[matchId] = s;
+        });
+      }
+      updateKOButtons(matchId);
+    }
+  });
+
+  // Start real-time lock checker
+  startLockChecker();
+});
+
+// ── Real-time lock ─────────────────────────────────────────────────────────
+// Track which matches we have already locked in this session
+const alreadyLocked = new Set();
+
+function startLockChecker() {
+  // Check every 5 seconds
+  setInterval(checkAndLockMatches, 5000);
+}
+
+function checkAndLockMatches() {
+  const now = Date.now();
+  document.querySelectorAll('[data-kickoff]').forEach(row => {
+    const matchId = row.dataset.matchId;
+    const finished = row.dataset.finished === 'true';
+    const allowsScore = row.dataset.allowsScore === 'true';
+    const isBettable = row.dataset.isBettable === 'true';
+    const kickoff = new Date(row.dataset.kickoff).getTime();
+
+    // Skip if: already finished, already locked by us, or not bettable
+    if (finished || alreadyLocked.has(matchId) || !isBettable) return;
+
+    // Only lock once the match kickoff has passed AND it was in a bettable phase
+    // (the server's AJAX endpoint is the true gatekeeper, but we lock the UI
+    //  to avoid confusion — only for matches whose kickoff genuinely just passed)
+    if (now >= kickoff) {
+      lockMatchUI(matchId, allowsScore);
+      alreadyLocked.add(matchId);
+    }
+  });
+}
+
+function lockMatchUI(matchId, allowsScore) {
+  if (allowsScore) {
+    // Knockout: replace score inputs with static text
+    const hgEl = document.getElementById('hg-' + matchId);
+    const agEl = document.getElementById('ag-' + matchId);
+    const dashEl = hgEl?.nextElementSibling; // the "–" span
+
+    if (hgEl && agEl) {
+      const hgVal = hgEl.value;
+      const agVal = agEl.value;
+      const scoreText = (hgVal !== '' && agVal !== '')
+        ? `${hgVal}–${agVal}`
+        : '—';
+      // Build static score display
+      const staticScore = document.createElement('span');
+      staticScore.className = 'text-white/50 font-mono text-sm px-1';
+      staticScore.textContent = scoreText;
+      // Remove inputs and dash, insert static
+      if (dashEl) dashEl.remove();
+      agEl.replaceWith(staticScore);
+      hgEl.remove();
+      // Remove draw picker if visible
+      const dp = document.getElementById('draw-picker-' + matchId);
+      if (dp) dp.remove();
+      // Make team buttons non-interactive
+      ['home','away'].forEach(side => {
+        const btn = document.getElementById('btn-' + side + '-' + matchId);
+        if (btn) {
+          btn.removeAttribute('onclick');
+          btn.style.cursor = 'default';
+        }
+      });
+    }
+  } else {
+    // Group stage: disable all 3 pill buttons
+    ['home','draw','away'].forEach(opt => {
+      const btn = document.getElementById('btn-' + opt + '-' + matchId);
+      if (btn) {
+        btn.removeAttribute('onclick');
+        btn.style.cursor = 'default';
+        // Remove hover classes
+        btn.className = btn.className
+          .replace(/hover:border-white\/30\s*/g, '')
+          .replace(/hover:text-white\s*/g, '')
+          .replace(/cursor-pointer\s*/g, '')
+          .trim() + ' cursor-default';
+      }
+    });
+  }
+}
+</script>
+{% endblock %}

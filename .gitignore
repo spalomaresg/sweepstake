@@ -1,0 +1,18 @@
+# ==========================================
+# .gitignore personalizado para tu proyecto
+# ==========================================
+
+# 1. Entorno virtual y archivos del sistema (No se suben)
+.venv/
+.DS_Store
+
+# 2. Privacidad y Seguridad Local (¡CRÍTICO!)
+# Tu base de datos SQLite local contiene datos reales de tu app. Se queda en casa.
+db.sqlite3
+
+# Archivos con datos personales, listas o analíticas. No deben ir a Git.
+teams.csv
+valid_emails.csv
+
+# 3. Archivos de configuración sensible (Si creas el archivo .env)
+.env

@@ -1,0 +1,21 @@
+{% extends 'bets/base.html' %}
+{% block title %}Sign in — ThreatFabric World Cup 2026{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-16">
+  <div class="glass rounded-2xl p-8">
+    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">SIGN IN</h1>
+    <p class="text-center text-white/40 text-sm mb-6">ThreatFabric World Cup 2026</p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{{ field.label }}</label>
+        {{ field }}
+      </div>
+      {% endfor %}
+      <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">Sign in</button>
+    </form>
+    <p class="text-center text-white/40 text-sm mt-5">No account yet? <a href="{% url 'register' %}" class="text-emerald-400 hover:underline">Register</a></p>
+  </div>
+</div>
+{% endblock %}

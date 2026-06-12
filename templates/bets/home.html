@@ -1,0 +1,13 @@
+{% extends 'bets/base.html' %}
+{% block content %}
+<div class="min-h-[85vh] flex flex-col items-center justify-center text-center">
+  <div class="mb-4 text-5xl">⚽</div>
+  <h1 class="font-display text-6xl tracking-widest text-white mb-1">THREATFABRIC</h1>
+  <h2 class="font-display text-5xl tracking-widest text-emerald-400 mb-2">WORLD CUP 2026</h2>
+  <p class="text-white/50 text-base mb-10 max-w-md">Predict match results, compete with your colleagues, climb the leaderboard.</p>
+  <div class="flex gap-4">
+    <a href="{% url 'login' %}" class="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition">Sign in</a>
+    <a href="{% url 'register' %}" class="px-8 py-3 glass hover:bg-white/10 rounded-xl font-semibold transition">Register</a>
+  </div>
+</div>
+{% endblock %}

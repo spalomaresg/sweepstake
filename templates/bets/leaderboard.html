@@ -1,0 +1,119 @@
+{% extends 'bets/base.html' %}
+{% load bet_extras %}
+{% block title %}Leaderboard — ThreatFabric World Cup 2026{% endblock %}
+{% block content %}
+<h1 class="font-display text-5xl text-emerald-400 mb-6">LEADERBOARD</h1>
+
+<!-- Player / Teams tabs -->
+<div class="flex gap-2 mb-6">
+  <button onclick="showTab('individual')" id="tab-individual"
+    class="px-5 py-2 rounded-lg font-semibold transition bg-emerald-500 text-white text-sm">👤 Individual</button>
+  <button onclick="showTab('teams')" id="tab-teams"
+    class="px-5 py-2 rounded-lg font-semibold transition glass text-white/60 hover:text-white text-sm">🏆 Teams</button>
+</div>
+
+<!-- INDIVIDUAL -->
+<div id="panel-individual">
+  <div class="glass rounded-2xl overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
+          <th class="px-4 py-4 text-left">#</th>
+          <th class="px-4 py-4 text-left">Player</th>
+          <th class="px-4 py-4 text-left">Team</th>
+          {% for phase_key, phase_label in active_phases %}
+          <th class="px-3 py-4 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
+          {% endfor %}
+          <th class="px-4 py-4 text-right text-white/60 font-bold">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in individual_ranking %}
+        <tr class="border-b border-white/5 hover:bg-white/5 transition {% if row.profile.user == request.user %}bg-emerald-500/10{% endif %}">
+          <td class="px-4 py-4 font-display text-xl
+            {% if forloop.counter == 1 %}text-yellow-400{% elif forloop.counter == 2 %}text-gray-300{% elif forloop.counter == 3 %}text-amber-600{% else %}text-white/30{% endif %}">
+            {{ forloop.counter }}
+          </td>
+          <td class="px-4 py-4 font-semibold whitespace-nowrap">
+            {{ row.profile.user.username }}
+            {% if row.profile.user == request.user %}<span class="ml-1 text-xs text-emerald-400">(you)</span>{% endif %}
+          </td>
+          <td class="px-4 py-4">
+            {% if row.profile.team %}
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                style="background:{{ row.profile.team.color }}22;color:{{ row.profile.team.color }};border:1px solid {{ row.profile.team.color }}44">
+                {{ row.profile.team.name }}
+              </span>
+            {% else %}<span class="text-white/20">—</span>{% endif %}
+          </td>
+          {% for phase_key, _ in active_phases %}
+          {% with pts=row.phase_points|getitem:phase_key %}
+          <td class="px-3 py-4 text-right {% if pts > 0 %}text-white/70{% else %}text-white/20{% endif %}">{{ pts }}</td>
+          {% endwith %}
+          {% endfor %}
+          <td class="px-4 py-4 text-right font-display text-2xl text-emerald-400">{{ row.total }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">No predictions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TEAMS -->
+<div id="panel-teams" class="hidden">
+  <div class="glass rounded-2xl overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
+          <th class="px-4 py-4 text-left">#</th>
+          <th class="px-4 py-4 text-left">Team</th>
+          <th class="px-4 py-4 text-right">Members</th>
+          {% for phase_key, phase_label in active_phases %}
+          <th class="px-3 py-4 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
+          {% endfor %}
+          <th class="px-4 py-4 text-right text-white/60 font-bold">Avg Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in team_ranking %}
+        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+          <td class="px-4 py-4 font-display text-xl
+            {% if forloop.counter == 1 %}text-yellow-400{% elif forloop.counter == 2 %}text-gray-300{% elif forloop.counter == 3 %}text-amber-600{% else %}text-white/30{% endif %}">
+            {{ forloop.counter }}
+          </td>
+          <td class="px-4 py-4">
+            <span class="px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap"
+              style="background:{{ row.team.color }}22;color:{{ row.team.color }};border:1px solid {{ row.team.color }}44">
+              {{ row.team.name }}
+            </span>
+          </td>
+          <td class="px-4 py-4 text-right text-white/40">{{ row.members }}</td>
+          {% for phase_key, _ in active_phases %}
+          {% with pts=row.phase_points|getitem:phase_key %}
+          <td class="px-3 py-4 text-right {% if pts > 0 %}text-white/70{% else %}text-white/20{% endif %}">{{ pts }}</td>
+          {% endwith %}
+          {% endfor %}
+          <td class="px-4 py-4 text-right font-display text-2xl text-emerald-400">{{ row.average }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">No betting teams yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-xs text-white/30 mt-3 text-right">Phase columns show average pts per active member. Avg Total = overall average.</p>
+</div>
+
+<script>
+function showTab(tab) {
+  ['individual','teams'].forEach(t => {
+    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-' + t).className =
+      'px-5 py-2 rounded-lg font-semibold transition text-sm ' +
+      (t === tab ? 'bg-emerald-500 text-white' : 'glass text-white/60 hover:text-white');
+  });
+}
+</script>
+{% endblock %}
