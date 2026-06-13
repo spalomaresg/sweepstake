@@ -8,8 +8,10 @@
 <div class="flex gap-2 mb-6">
   <button onclick="showTab('individual')" id="tab-individual"
     class="px-5 py-2 rounded-lg font-semibold transition bg-emerald-500 text-white text-sm">👤 {% trans "Individual" %}</button>
+  {% if show_teams_tab %}
   <button onclick="showTab('teams')" id="tab-teams"
     class="px-5 py-2 rounded-lg font-semibold transition glass text-white/60 hover:text-white text-sm">🏆 {% trans "Teams" %}</button>
+  {% endif %}
 </div>
 
 <!-- INDIVIDUAL -->
@@ -61,6 +63,7 @@
 </div>
 
 <!-- TEAMS -->
+{% if show_teams_tab %}
 <div id="panel-teams" class="hidden">
   <div class="glass rounded-2xl overflow-x-auto">
     <table class="w-full text-sm">
@@ -104,10 +107,12 @@
   </div>
   <p class="text-xs text-white/30 mt-3 text-right">{% trans "Phase columns show average pts per active member. Avg Total = overall average." %}</p>
 </div>
+{% endif %}
 
 <script>
+const TABS = ['individual'{% if show_teams_tab %},'teams'{% endif %}];
 function showTab(tab) {
-  ['individual','teams'].forEach(t => {
+  TABS.forEach(t => {
     document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
     document.getElementById('tab-' + t).className =
       'px-5 py-2 rounded-lg font-semibold transition text-sm ' +

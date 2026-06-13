@@ -72,8 +72,8 @@ msgstr "Código de invitación"
 msgid "Your Team"
 msgstr "Tu equipo"
 
-msgid "— Select your team —"
-msgstr "— Selecciona tu equipo —"
+msgid "— No team —"
+msgstr "— Sin equipo —"
 
 msgid "This email is not on the invite list."
 msgstr "Este email no está en la lista de invitados."

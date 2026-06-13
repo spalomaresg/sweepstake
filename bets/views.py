@@ -138,10 +138,15 @@ def leaderboard(request):
         })
     team_ranking.sort(key=lambda x: x['average'], reverse=True)
 
+    show_teams_tab = Profile.objects.filter(
+        team__isnull=False, user__is_staff=False
+    ).exists()
+
     return render(request, 'bets/leaderboard.html', {
         'individual_ranking': individual_ranking,
         'team_ranking': team_ranking,
         'active_phases': ordered_phases,
+        'show_teams_tab': show_teams_tab,
     })
 
 

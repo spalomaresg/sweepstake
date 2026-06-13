@@ -9,6 +9,7 @@
     <form method="post" class="space-y-4">
       {% csrf_token %}
       {% for field in form %}
+      {% if field.name != 'team' or sweepstake_teams %}
       <div>
         <label class="block text-sm text-white/60 mb-1">{{ field.label }}</label>
         {% if field.name == 'team' %}
@@ -35,6 +36,7 @@
         {% endif %}
         {% if field.errors %}<p class="text-red-400 text-xs mt-1">{{ field.errors|join:", " }}</p>{% endif %}
       </div>
+      {% endif %}
       {% endfor %}
       <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">
         {% trans "Create account" %}

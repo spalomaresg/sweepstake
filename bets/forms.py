@@ -57,9 +57,9 @@ class RegistrationForm(UserCreationForm):
     )
     team = forms.ModelChoiceField(
         queryset=SweepstakeTeam.objects.all().order_by('name'),
-        required=True,
+        required=False,
         label=_("Your Team"),
-        empty_label=_("— Select your team —"),
+        empty_label=_("— No team —"),
     )
 
     class Meta:
