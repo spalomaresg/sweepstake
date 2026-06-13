@@ -1,12 +1,12 @@
 {% extends 'bets/base.html' %}
-{% load bet_extras %}
-{% block title %}My Predictions — {{ web_title }} World Cup 2026{% endblock %}
+{% load bet_extras i18n %}
+{% block title %}{% trans "My Predictions" %} — {{ web_title }} {% trans "World Cup 2026" %}{% endblock %}
 {% block content %}
 
 <div class="flex items-center justify-between mb-8">
-  <h1 class="font-display text-4xl md:text-5xl text-emerald-400">MY BETS</h1>
+  <h1 class="font-display text-4xl md:text-5xl text-emerald-400">{% trans "MY BETS" %}</h1>
   <div class="glass rounded-xl px-6 py-3 text-center">
-    <div class="text-white/40 text-xs uppercase tracking-wider">Total points</div>
+    <div class="text-white/40 text-xs uppercase tracking-wider">{% trans "Total points" %}</div>
     <div class="font-display text-3xl md:text-4xl text-emerald-400">{{ total_points }}</div>
   </div>
 </div>
@@ -26,12 +26,12 @@
 
   <!-- Scoring banner -->
   <div class="mb-4 px-5 py-3 rounded-xl bg-white/5 border border-white/10 flex flex-wrap gap-4 text-sm text-white/60 items-center">
-    <span class="font-semibold text-white/80">{{ phase.label }} scoring:</span>
-    <span>🎯 Correct winner = <strong class="text-emerald-400">{{ phase.points_winner }} pt{% if phase.points_winner != 1 %}s{% endif %}</strong></span>
-    {% if phase.points_exact %}<span>🔢 Exact score = <strong class="text-yellow-400">{{ phase.points_exact }} pts</strong></span>{% endif %}
+    <span class="font-semibold text-white/80">{{ phase.label }} {% trans "scoring:" %}</span>
+    <span>🎯 {% trans "Correct winner" %} = <strong class="text-emerald-400">{% blocktrans count points=phase.points_winner %}{{ points }} pt{% plural %}{{ points }} pts{% endblocktrans %}</strong></span>
+    {% if phase.points_exact %}<span>🔢 {% trans "Exact score" %} = <strong class="text-yellow-400">{{ phase.points_exact }} pts</strong></span>{% endif %}
     {% if not phase.is_bettable %}
-      {% if phase.is_complete %}<span class="ml-auto text-white/30 text-xs italic">🔒 Locked</span>
-      {% else %}<span class="ml-auto text-white/30 text-xs italic">🔒 Not open yet</span>{% endif %}
+      {% if phase.is_complete %}<span class="ml-auto text-white/30 text-xs italic">🔒 {% trans "Locked" %}</span>
+      {% else %}<span class="ml-auto text-white/30 text-xs italic">🔒 {% trans "Not open yet" %}</span>{% endif %}
     {% endif %}
   </div>
 
@@ -39,8 +39,8 @@
   <!-- No matches yet -->
   <div class="glass rounded-2xl px-6 py-12 text-center text-white/40">
     <div class="text-4xl mb-3">🏗️</div>
-    <div class="font-semibold text-white/60 mb-1">The bracket is being assembled…</div>
-    <div class="text-sm">Our admin is working hard filling in the fixtures. Check back soon — and start thinking about your picks!</div>
+    <div class="font-semibold text-white/60 mb-1">{% trans "The bracket is being assembled…" %}</div>
+    <div class="text-sm">{% trans "Our admin is working hard filling in the fixtures. Check back soon — and start thinking about your picks!" %}</div>
   </div>
 
   {% else %}
@@ -48,10 +48,10 @@
   <div class="glass rounded-2xl overflow-hidden">
     <!-- Desktop-only column headers -->
     <div class="hidden md:grid grid-cols-[1fr_2.4fr_1fr_5rem] border-b border-white/10 text-white/30 text-xs uppercase tracking-wider px-5 py-3 gap-4">
-      <div>Match</div>
-      <div>Prediction</div>
-      <div>Result</div>
-      <div class="text-right">Pts</div>
+      <div>{% trans "Match" %}</div>
+      <div>{% trans "Prediction" %}</div>
+      <div>{% trans "Result" %}</div>
+      <div class="text-right">{% trans "Pts" %}</div>
     </div>
 
     {% for row in phase.rows %}
@@ -71,7 +71,7 @@
       <div class="flex items-start justify-between md:hidden">
         <div>
           <div class="kickoff-display text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
-          {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">Group {{ match.home_team.group }}</div>{% endif %}
+          {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">{% blocktrans with letter=match.home_team.group %}Group {{ letter }}{% endblocktrans %}</div>{% endif %}
         </div>
         <div class="text-right pl-4">
           {% if match.finished %}
@@ -85,7 +85,7 @@
       <!-- Desktop-only: date column -->
       <div class="hidden md:block pt-1">
         <div class="kickoff-display text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
-        {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">Group {{ match.home_team.group }}</div>{% endif %}
+        {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">{% blocktrans with letter=match.home_team.group %}Group {{ letter }}{% endblocktrans %}</div>{% endif %}
       </div>
 
       <!-- Prediction -->
@@ -105,7 +105,7 @@
               class="min-w-0 md:w-20 text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm transition
                 {% if bet and bet.predicted_winner == 'draw' %}bg-blue-500/20 border-blue-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
-              Draw
+              {% trans "Draw" %}
             </button>
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'away')"{% endif %}
               id="btn-away-{{ match.id }}"
@@ -148,7 +148,7 @@
             </button>
           </div>
           {% if not locked and phase.is_bettable %}
-          <div id="draw-picker-{{ match.id }}" class="hidden text-xs text-yellow-400/80 text-center w-full mt-1">Who wins on penalties? Select manually.</div>
+          <div id="draw-picker-{{ match.id }}" class="hidden text-xs text-yellow-400/80 text-center w-full mt-1">{% trans "Who wins on penalties? Select manually." %}</div>
           {% endif %}
           <div id="status-{{ match.id }}" class="text-xs hidden"></div>
         {% endif %}
@@ -167,9 +167,9 @@
               {{ match.away_team.flag }} {{ match.away_team.name }}
             </div>
           {% else %}
-            <div class="text-sm font-semibold text-white/70">Draw</div>
+            <div class="text-sm font-semibold text-white/70">{% trans "Draw" %}</div>
           {% endif %}
-          <div class="text-xs text-white/40 font-mono mt-0.5">{{ match.home_goals }}–{{ match.away_goals }}{% if match.knockout_winner and match.home_goals == match.away_goals %} (pens){% endif %}</div>
+          <div class="text-xs text-white/40 font-mono mt-0.5">{{ match.home_goals }}–{{ match.away_goals }}{% if match.knockout_winner and match.home_goals == match.away_goals %} {% trans "(pens)" %}{% endif %}</div>
         {% else %}
           <span class="text-white/20 text-xs hidden md:inline">—</span>
         {% endif %}
@@ -217,7 +217,7 @@ async function postBet(matchId, payload) {
     });
     const d = await r.json();
     if (!d.ok) showStatus(matchId, d.error || 'Error', false);
-  } catch { showStatus(matchId, 'Network error', false); }
+  } catch { showStatus(matchId, '{% trans "Network error" %}', false); }
 }
 
 // ── Group stage ────────────────────────────────────────────────────────────
@@ -326,10 +326,16 @@ function showPhase(key) {
 }
 
 // ── Kickoff times in browser local timezone ────────────────────────────────
+const MONTH_NAMES = [
+  '{% trans "Jan" %}','{% trans "Feb" %}','{% trans "Mar" %}',
+  '{% trans "Apr" %}','{% trans "May" %}','{% trans "Jun" %}',
+  '{% trans "Jul" %}','{% trans "Aug" %}','{% trans "Sep" %}',
+  '{% trans "Oct" %}','{% trans "Nov" %}','{% trans "Dec" %}'
+];
 function formatLocalKickoff(isoStr) {
   const d = new Date(isoStr);
   const day = String(d.getDate()).padStart(2, '0');
-  const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  const mon = MONTH_NAMES[d.getMonth()];
   const hh  = String(d.getHours()).padStart(2, '0');
   const mm  = String(d.getMinutes()).padStart(2, '0');
   return `${day} ${mon} · ${hh}:${mm}`;

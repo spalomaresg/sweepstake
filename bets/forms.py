@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from .models import Bet, SweepstakeTeam
 
 FIELD_CLASS = 'w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-emerald-400'
@@ -46,19 +47,19 @@ def load_valid_emails():
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
-        label="Email",
-        help_text="Must match your invite email exactly."
+        label=_("Email"),
+        help_text=_("Must match your invite email exactly.")
     )
     invite_code = forms.CharField(
         required=True,
-        label="Invite Code",
-        help_text="The invite code provided alongside your email."
+        label=_("Invite Code"),
+        help_text=_("The invite code provided alongside your email.")
     )
     team = forms.ModelChoiceField(
         queryset=SweepstakeTeam.objects.all().order_by('name'),
         required=True,
-        label="Your Team",
-        empty_label="— Select your team —",
+        label=_("Your Team"),
+        empty_label=_("— Select your team —"),
     )
 
     class Meta:
@@ -81,17 +82,17 @@ class RegistrationForm(UserCreationForm):
         valid_emails = load_valid_emails()
 
         if email not in valid_emails:
-            self.add_error('email', "This email is not on the invite list.")
+            self.add_error('email', _("This email is not on the invite list."))
             return cleaned
 
         expected_code = valid_emails[email]
         if invite_code.lower() != expected_code.lower():
-            self.add_error('invite_code', "Invalid invite code for this email.")
+            self.add_error('invite_code', _("Invalid invite code for this email."))
             return cleaned
 
         # Check uniqueness (belt-and-suspenders on top of DB constraint)
         if User.objects.filter(email__iexact=email).exists():
-            self.add_error('email', "An account with this email already exists.")
+            self.add_error('email', _("An account with this email already exists."))
 
         return cleaned
 

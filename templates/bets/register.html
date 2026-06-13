@@ -1,10 +1,11 @@
 {% extends 'bets/base.html' %}
-{% block title %}Register — {{ web_title }} World Cup 2026{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Register" %} — {{ web_title }} {% trans "World Cup 2026" %}{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto mt-10">
   <div class="glass rounded-2xl p-8">
-    <h1 class="font-display text-4xl text-emerald-400 mb-1 text-center">REGISTER</h1>
-    <p class="text-center text-white/40 text-sm mb-7">You need an invite email and code to register.</p>
+    <h1 class="font-display text-4xl text-emerald-400 mb-1 text-center">{% trans "REGISTER" %}</h1>
+    <p class="text-center text-white/40 text-sm mb-7">{% trans "You need an invite email and code to register." %}</p>
     <form method="post" class="space-y-4">
       {% csrf_token %}
       {% for field in form %}
@@ -29,18 +30,18 @@
         {% else %}
           {{ field }}
           {% if field.name == 'email' %}
-            <p class="text-white/30 text-xs mt-1">Must match your invite email exactly.</p>
+            <p class="text-white/30 text-xs mt-1">{% trans "Must match your invite email exactly." %}</p>
           {% endif %}
         {% endif %}
         {% if field.errors %}<p class="text-red-400 text-xs mt-1">{{ field.errors|join:", " }}</p>{% endif %}
       </div>
       {% endfor %}
       <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">
-        Create account
+        {% trans "Create account" %}
       </button>
     </form>
-    <p class="text-center text-white/40 text-sm mt-5">Already have an account?
-      <a href="{% url 'login' %}" class="text-emerald-400 hover:underline">Sign in</a></p>
+    <p class="text-center text-white/40 text-sm mt-5">{% trans "Already have an account?" %}
+      <a href="{% url 'login' %}" class="text-emerald-400 hover:underline">{% trans "Sign in" %}</a></p>
   </div>
 </div>
 

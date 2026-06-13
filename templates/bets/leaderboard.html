@@ -1,15 +1,15 @@
 {% extends 'bets/base.html' %}
-{% load bet_extras %}
-{% block title %}Leaderboard — {{ web_title }} World Cup 2026{% endblock %}
+{% load bet_extras i18n %}
+{% block title %}{% trans "Leaderboard" %} — {{ web_title }} {% trans "World Cup 2026" %}{% endblock %}
 {% block content %}
-<h1 class="font-display text-5xl text-emerald-400 mb-6">LEADERBOARD</h1>
+<h1 class="font-display text-5xl text-emerald-400 mb-6">{% trans "LEADERBOARD" %}</h1>
 
 <!-- Player / Teams tabs -->
 <div class="flex gap-2 mb-6">
   <button onclick="showTab('individual')" id="tab-individual"
-    class="px-5 py-2 rounded-lg font-semibold transition bg-emerald-500 text-white text-sm">👤 Individual</button>
+    class="px-5 py-2 rounded-lg font-semibold transition bg-emerald-500 text-white text-sm">👤 {% trans "Individual" %}</button>
   <button onclick="showTab('teams')" id="tab-teams"
-    class="px-5 py-2 rounded-lg font-semibold transition glass text-white/60 hover:text-white text-sm">🏆 Teams</button>
+    class="px-5 py-2 rounded-lg font-semibold transition glass text-white/60 hover:text-white text-sm">🏆 {% trans "Teams" %}</button>
 </div>
 
 <!-- INDIVIDUAL -->
@@ -19,12 +19,12 @@
       <thead>
         <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
           <th class="px-2 py-2 text-left sticky left-0 z-20 bg-[#0d1117] w-10 min-w-[2.5rem]">#</th>
-          <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] border-r border-white/10">Player</th>
-          <th class="px-3 py-2 text-left hidden md:table-cell">Team</th>
+          <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] border-r border-white/10">{% trans "Player" %}</th>
+          <th class="px-3 py-2 text-left hidden md:table-cell">{% trans "Team" %}</th>
           {% for phase_key, phase_label in active_phases %}
           <th class="px-2 py-2 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
           {% endfor %}
-          <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">Total</th>
+          <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">{% trans "Total" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -35,7 +35,7 @@
             {{ forloop.counter }}
           </td>
           <td class="px-3 py-2 sticky left-10 z-10 bg-[#0d1117] border-r border-white/10">
-            <div class="font-semibold truncate max-w-[100px] md:max-w-none">{{ row.profile.user.username }}{% if row.profile.user == request.user %}<span class="ml-1 text-xs text-emerald-400">(you)</span>{% endif %}</div>
+            <div class="font-semibold truncate max-w-[100px] md:max-w-none">{{ row.profile.user.username }}{% if row.profile.user == request.user %}<span class="ml-1 text-xs text-emerald-400">({% trans "you" %})</span>{% endif %}</div>
           </td>
           <td class="px-3 py-2 hidden md:table-cell">
             {% if row.profile.team %}
@@ -53,7 +53,7 @@
           <td class="px-3 py-2 text-right font-display text-lg text-emerald-400 sticky right-0 z-10 bg-[#0d1117] border-l border-white/10">{{ row.total }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">No predictions yet.</td></tr>
+        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">{% trans "No predictions yet." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -67,12 +67,12 @@
       <thead>
         <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
           <th class="px-2 py-2 text-left sticky left-0 z-20 bg-[#0d1117] w-10 min-w-[2.5rem]">#</th>
-          <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] w-36 min-w-[9rem]">Team</th>
-          <th class="px-3 py-2 text-right sticky left-[11.5rem] z-20 bg-[#0d1117] border-r border-white/10 hidden md:table-cell">Members</th>
+          <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] w-36 min-w-[9rem]">{% trans "Team" %}</th>
+          <th class="px-3 py-2 text-right sticky left-[11.5rem] z-20 bg-[#0d1117] border-r border-white/10 hidden md:table-cell">{% trans "Members" %}</th>
           {% for phase_key, phase_label in active_phases %}
           <th class="px-2 py-2 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
           {% endfor %}
-          <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">Avg Total</th>
+          <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">{% trans "Avg Total" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -97,12 +97,12 @@
           <td class="px-3 py-2 text-right font-display text-lg text-emerald-400 sticky right-0 z-10 bg-[#0d1117] border-l border-white/10">{{ row.average }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">No betting teams yet.</td></tr>
+        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">{% trans "No betting teams yet." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <p class="text-xs text-white/30 mt-3 text-right">Phase columns show average pts per active member. Avg Total = overall average.</p>
+  <p class="text-xs text-white/30 mt-3 text-right">{% trans "Phase columns show average pts per active member. Avg Total = overall average." %}</p>
 </div>
 
 <script>

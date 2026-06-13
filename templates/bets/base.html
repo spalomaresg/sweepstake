@@ -1,9 +1,11 @@
+{% load i18n %}
+{% get_current_language as CURRENT_LANG %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ CURRENT_LANG }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ web_title }} World Cup 2026{% endblock %}</title>
+  <title>{% block title %}{{ web_title }} {% trans "World Cup 2026" %}{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -20,24 +22,24 @@
       <!-- Main row: logo + desktop links / logo + sign-out (mobile) -->
       <div class="flex items-center justify-between px-6 py-3">
         <a href="{% url 'leaderboard' %}" class="font-display text-xl text-emerald-400">
-          <span class="md:hidden tracking-wider">⚽ {{ web_title }} WC 2026</span>
-          <span class="hidden md:inline tracking-widest">⚽ {{ web_title|upper }} WORLD CUP 2026</span>
+          <span class="md:hidden tracking-wider">⚽ {{ web_title }} {% trans "WC 2026" %}</span>
+          <span class="hidden md:inline tracking-widest">⚽ {{ web_title|upper }} {% trans "WORLD CUP 2026" %}</span>
         </a>
-        <a href="{% url 'logout' %}" class="md:hidden text-red-400 hover:text-red-300 transition text-xs font-medium flex-shrink-0">Sign out</a>
+        <a href="{% url 'logout' %}" class="md:hidden text-red-400 hover:text-red-300 transition text-xs font-medium flex-shrink-0">{% trans "Sign out" %}</a>
         <div class="hidden md:flex items-center gap-5 text-sm font-medium">
-          <a href="{% url 'leaderboard' %}" class="hover:text-emerald-400 transition">Leaderboard</a>
-          <a href="{% url 'my_predictions' %}" class="hover:text-emerald-400 transition">My Predictions</a>
-          <a href="{% url 'group_standings' %}" class="hover:text-emerald-400 transition">Standings</a>
+          <a href="{% url 'leaderboard' %}" class="hover:text-emerald-400 transition">{% trans "Leaderboard" %}</a>
+          <a href="{% url 'my_predictions' %}" class="hover:text-emerald-400 transition">{% trans "My Predictions" %}</a>
+          <a href="{% url 'group_standings' %}" class="hover:text-emerald-400 transition">{% trans "Standings" %}</a>
           <span class="text-white/20">|</span>
           <span class="text-white/50 text-xs">{{ user.username }}</span>
-          <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs">Sign out</a>
+          <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs">{% trans "Sign out" %}</a>
         </div>
       </div>
       <!-- Mobile nav: page links only -->
       <div class="flex md:hidden overflow-x-auto gap-5 px-6 py-3 text-sm font-medium border-t border-white/5">
-        <a href="{% url 'leaderboard' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">Leaderboard</a>
-        <a href="{% url 'my_predictions' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">My Predictions</a>
-        <a href="{% url 'group_standings' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">Standings</a>
+        <a href="{% url 'leaderboard' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">{% trans "Leaderboard" %}</a>
+        <a href="{% url 'my_predictions' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">{% trans "My Predictions" %}</a>
+        <a href="{% url 'group_standings' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">{% trans "Standings" %}</a>
       </div>
     </div>
   </nav>

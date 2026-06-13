@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
 
 class SweepstakeTeam(models.Model):
@@ -90,13 +91,13 @@ class NationalTeam(models.Model):
 
 
 PHASE_CHOICES = [
-    ('group_stage',   'Group Stage'),
-    ('round_of_32',   'Round of 32'),
-    ('round_of_16',   'Round of 16'),
-    ('quarterfinals', 'Quarter-finals'),
-    ('semifinals',    'Semi-finals'),
-    ('third_place',   'Third Place'),
-    ('final',         'Final'),
+    ('group_stage',   _('Group Stage')),
+    ('round_of_32',   _('Round of 32')),
+    ('round_of_16',   _('Round of 16')),
+    ('quarterfinals', _('Quarter-finals')),
+    ('semifinals',    _('Semi-finals')),
+    ('third_place',   _('Third Place')),
+    ('final',         _('Final')),
 ]
 
 PHASE_ORDER = [p[0] for p in PHASE_CHOICES]

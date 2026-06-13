@@ -1,24 +1,25 @@
 {% extends 'bets/base.html' %}
-{% block title %}Group Standings — {{ web_title }} World Cup 2026{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Group Standings" %} — {{ web_title }} {% trans "World Cup 2026" %}{% endblock %}
 {% block content %}
-<h1 class="font-display text-5xl text-emerald-400 mb-8">GROUP STANDINGS</h1>
+<h1 class="font-display text-5xl text-emerald-400 mb-8">{% trans "GROUP STANDINGS" %}</h1>
 
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 {% for group_letter, table in standings.items %}
 <div class="glass rounded-2xl overflow-hidden">
   <div class="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-    <span class="font-display text-2xl text-emerald-400">GROUP {{ group_letter }}</span>
+    <span class="font-display text-2xl text-emerald-400">{% trans "GROUP" %} {{ group_letter }}</span>
   </div>
   <table class="w-full text-sm">
     <thead>
       <tr class="text-white/30 text-xs uppercase border-b border-white/5">
-        <th class="px-4 py-2 text-left">Team</th>
+        <th class="px-4 py-2 text-left">{% trans "Team" %}</th>
         <th class="px-2 py-2 text-center">P</th>
         <th class="px-2 py-2 text-center">W</th>
         <th class="px-2 py-2 text-center">D</th>
         <th class="px-2 py-2 text-center">L</th>
         <th class="px-2 py-2 text-center">GD</th>
-        <th class="px-3 py-2 text-right font-bold text-white/50">Pts</th>
+        <th class="px-3 py-2 text-right font-bold text-white/50">{% trans "Pts" %}</th>
       </tr>
     </thead>
     <tbody>
@@ -46,9 +47,9 @@
   </table>
 </div>
 {% empty %}
-<div class="col-span-3 text-center text-white/30 py-20">No group stage matches found.</div>
+<div class="col-span-3 text-center text-white/30 py-20">{% trans "No group stage matches found." %}</div>
 {% endfor %}
 </div>
 
-<p class="mt-6 text-white/30 text-xs text-center">↑ Top 2 qualify automatically. Best 8 third-place teams also advance to Round of 32.</p>
+<p class="mt-6 text-white/30 text-xs text-center">{% trans "↑ Top 2 qualify automatically. Best 8 third-place teams also advance to Round of 32." %}</p>
 {% endblock %}

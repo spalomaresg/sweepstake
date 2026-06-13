@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     WEB_TITLE=(str, 'ThreatFabric'),
+    LANGUAGE=(str, 'en'),
 )
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
@@ -72,7 +73,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = env('LANGUAGE')
+LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Europe/Madrid'
 USE_I18N = True
 USE_TZ = True

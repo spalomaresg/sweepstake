@@ -1,0 +1,289 @@
+# Spanish translations for worldcup_sweepstake
+msgid ""
+msgstr ""
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# ── Navigation ────────────────────────────────────────────────────────────────
+msgid "Sign out"
+msgstr "Cerrar sesión"
+
+msgid "Leaderboard"
+msgstr "Clasificación"
+
+msgid "My Predictions"
+msgstr "Mis Predicciones"
+
+msgid "Standings"
+msgstr "Tabla"
+
+# ── Shared title fragment ─────────────────────────────────────────────────────
+msgid "World Cup 2026"
+msgstr "Copa del Mundo 2026"
+
+msgid "WORLD CUP 2026"
+msgstr "COPA DEL MUNDO 2026"
+
+msgid "WC 2026"
+msgstr "CM 2026"
+
+# ── Home page ─────────────────────────────────────────────────────────────────
+msgid "Predict match results, compete with your colleagues, climb the leaderboard."
+msgstr "Predice los resultados, compite con tus compañeros y sube en la clasificación."
+
+msgid "Sign in"
+msgstr "Iniciar sesión"
+
+msgid "Register"
+msgstr "Registrarse"
+
+# ── Login page ────────────────────────────────────────────────────────────────
+msgid "Sign in to continue"
+msgstr "Inicia sesión para continuar"
+
+msgid "No account yet?"
+msgstr "¿No tienes cuenta?"
+
+# ── Register page ─────────────────────────────────────────────────────────────
+msgid "REGISTER"
+msgstr "REGÍSTRATE"
+
+msgid "You need an invite email and code to register."
+msgstr "Necesitas un email de invitación y un código para registrarte."
+
+msgid "Must match your invite email exactly."
+msgstr "Debe coincidir exactamente con tu email de invitación."
+
+msgid "Create account"
+msgstr "Crear cuenta"
+
+msgid "Already have an account?"
+msgstr "¿Ya tienes una cuenta?"
+
+# ── Register form (forms.py) ──────────────────────────────────────────────────
+msgid "Email"
+msgstr "Email"
+
+msgid "Invite Code"
+msgstr "Código de invitación"
+
+msgid "Your Team"
+msgstr "Tu equipo"
+
+msgid "— Select your team —"
+msgstr "— Selecciona tu equipo —"
+
+msgid "This email is not on the invite list."
+msgstr "Este email no está en la lista de invitados."
+
+msgid "Invalid invite code for this email."
+msgstr "Código de invitación inválido para este email."
+
+msgid "An account with this email already exists."
+msgstr "Ya existe una cuenta con este email."
+
+# ── Views messages ────────────────────────────────────────────────────────────
+msgid "Welcome, %(username)s!"
+msgstr "¡Bienvenido, %(username)s!"
+
+msgid "Your email is not on the invite list."
+msgstr "Tu email no está en la lista de invitados."
+
+msgid "Incorrect username or password."
+msgstr "Usuario o contraseña incorrectos."
+
+msgid "Match has already started."
+msgstr "El partido ya ha comenzado."
+
+msgid "Betting not open for this phase yet."
+msgstr "Las apuestas para esta fase aún no están abiertas."
+
+msgid "Invalid data."
+msgstr "Datos inválidos."
+
+msgid "Invalid winner selection."
+msgstr "Selección de ganador inválida."
+
+msgid "Goals must be numbers."
+msgstr "Los goles deben ser números."
+
+msgid "Winner does not match score."
+msgstr "El ganador no coincide con el marcador."
+
+msgid "Please select who wins on penalties."
+msgstr "Por favor, selecciona quién gana en penaltis."
+
+# ── Phase names (models.py) ───────────────────────────────────────────────────
+msgid "Group Stage"
+msgstr "Fase de grupos"
+
+msgid "Round of 32"
+msgstr "Ronda de 32"
+
+msgid "Round of 16"
+msgstr "Ronda de 16"
+
+msgid "Quarter-finals"
+msgstr "Cuartos de final"
+
+msgid "Semi-finals"
+msgstr "Semifinales"
+
+msgid "Third Place"
+msgstr "Tercer puesto"
+
+msgid "Final"
+msgstr "Final"
+
+# ── Leaderboard page ──────────────────────────────────────────────────────────
+msgid "LEADERBOARD"
+msgstr "CLASIFICACIÓN"
+
+msgid "Individual"
+msgstr "Individual"
+
+msgid "Teams"
+msgstr "Equipos"
+
+msgid "Player"
+msgstr "Jugador"
+
+msgid "Team"
+msgstr "Equipo"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Members"
+msgstr "Miembros"
+
+msgid "Avg Total"
+msgstr "Total Medio"
+
+msgid "you"
+msgstr "tú"
+
+msgid "No predictions yet."
+msgstr "Aún no hay predicciones."
+
+msgid "No betting teams yet."
+msgstr "Aún no hay equipos."
+
+msgid "Phase columns show average pts per active member. Avg Total = overall average."
+msgstr "Las columnas de fase muestran los puntos medios por miembro activo. Total Medio = promedio general."
+
+# ── My Predictions page ───────────────────────────────────────────────────────
+msgid "MY BETS"
+msgstr "MIS APUESTAS"
+
+msgid "Total points"
+msgstr "Puntos totales"
+
+msgid "scoring:"
+msgstr "puntuación:"
+
+msgid "Correct winner"
+msgstr "Ganador correcto"
+
+msgid "Exact score"
+msgstr "Marcador exacto"
+
+# Singular/plural for points
+msgid "%(points)s pt"
+msgid_plural "%(points)s pts"
+msgstr[0] "%(points)s pt"
+msgstr[1] "%(points)s pts"
+
+msgid "Locked"
+msgstr "Bloqueado"
+
+msgid "Not open yet"
+msgstr "Aún no disponible"
+
+msgid "The bracket is being assembled…"
+msgstr "El cuadro se está preparando…"
+
+msgid "Our admin is working hard filling in the fixtures. Check back soon — and start thinking about your picks!"
+msgstr "Nuestro admin está completando los partidos. ¡Vuelve pronto y empieza a pensar en tus picks!"
+
+msgid "Match"
+msgstr "Partido"
+
+msgid "Prediction"
+msgstr "Predicción"
+
+msgid "Result"
+msgstr "Resultado"
+
+msgid "Pts"
+msgstr "Pts"
+
+msgid "Group %(letter)s"
+msgstr "Grupo %(letter)s"
+
+msgid "Draw"
+msgstr "Empate"
+
+msgid "Who wins on penalties? Select manually."
+msgstr "¿Quién gana en penaltis? Selecciona manualmente."
+
+msgid "(pens)"
+msgstr "(pen.)"
+
+msgid "Network error"
+msgstr "Error de red"
+
+# ── Month abbreviations (used in JS) ─────────────────────────────────────────
+msgid "Jan"
+msgstr "Ene"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Apr"
+msgstr "Abr"
+
+msgid "May"
+msgstr "May"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Aug"
+msgstr "Ago"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Oct"
+msgstr "Oct"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Dec"
+msgstr "Dic"
+
+# ── Group Standings page ──────────────────────────────────────────────────────
+msgid "Group Standings"
+msgstr "Tabla de grupos"
+
+msgid "GROUP STANDINGS"
+msgstr "TABLA DE GRUPOS"
+
+msgid "GROUP"
+msgstr "GRUPO"
+
+msgid "No group stage matches found."
+msgstr "No se encontraron partidos de fase de grupos."
+
+msgid "↑ Top 2 qualify automatically. Best 8 third-place teams also advance to Round of 32."
+msgstr "↑ Los 2 primeros clasifican automáticamente. Los 8 mejores terceros también avanzan a la Ronda de 32."

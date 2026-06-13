@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.db.models import Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -40,7 +41,7 @@ def register(request):
             profile.team = form.selected_team
             profile.save()
             login(request, user)
-            messages.success(request, f'Welcome, {user.username}!')
+            messages.success(request, _('Welcome, %(username)s!') % {'username': user.username})
             return redirect('leaderboard')
     else:
         form = RegistrationForm()
@@ -58,12 +59,12 @@ def login_view(request):
             user = form.get_user()
             from .forms import load_valid_emails
             if not user.is_staff and user.email.lower() not in load_valid_emails():
-                messages.error(request, 'Your email is not on the invite list.')
+                messages.error(request, _('Your email is not on the invite list.'))
             else:
                 login(request, user)
                 return redirect('leaderboard')
         else:
-            messages.error(request, 'Incorrect username or password.')
+            messages.error(request, _('Incorrect username or password.'))
     else:
         form = AuthenticationForm()
     for field in form.fields.values():
@@ -217,16 +218,16 @@ def save_prediction_ajax(request, match_id):
     now = timezone.now()
 
     if now >= match.kickoff:
-        return JsonResponse({'ok': False, 'error': 'Match has already started.'}, status=400)
+        return JsonResponse({'ok': False, 'error': _('Match has already started.')}, status=400)
 
     bettable = get_bettable_phases()
     if match.phase not in bettable:
-        return JsonResponse({'ok': False, 'error': 'Betting not open for this phase yet.'}, status=400)
+        return JsonResponse({'ok': False, 'error': _('Betting not open for this phase yet.')}, status=400)
 
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return JsonResponse({'ok': False, 'error': 'Invalid data.'}, status=400)
+        return JsonResponse({'ok': False, 'error': _('Invalid data.')}, status=400)
 
     predicted_winner = data.get('predicted_winner')
     predicted_home_goals = data.get('predicted_home_goals')
@@ -234,22 +235,22 @@ def save_prediction_ajax(request, match_id):
 
     valid_winners = {'home', 'away', 'draw'}
     if predicted_winner not in valid_winners:
-        return JsonResponse({'ok': False, 'error': 'Invalid winner selection.'}, status=400)
+        return JsonResponse({'ok': False, 'error': _('Invalid winner selection.')}, status=400)
 
     if match.allows_score_prediction:
         try:
             predicted_home_goals = int(predicted_home_goals)
             predicted_away_goals = int(predicted_away_goals)
         except (TypeError, ValueError):
-            return JsonResponse({'ok': False, 'error': 'Goals must be numbers.'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Goals must be numbers.')}, status=400)
         # Knockout phases: no draws allowed — winner must be home or away
         # (equal score means it goes to penalties; winner reflects who advances)
         if predicted_home_goals > predicted_away_goals and predicted_winner != 'home':
-            return JsonResponse({'ok': False, 'error': 'Winner does not match score.'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Winner does not match score.')}, status=400)
         if predicted_away_goals > predicted_home_goals and predicted_winner != 'away':
-            return JsonResponse({'ok': False, 'error': 'Winner does not match score.'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Winner does not match score.')}, status=400)
         if predicted_home_goals == predicted_away_goals and predicted_winner not in ('home', 'away'):
-            return JsonResponse({'ok': False, 'error': 'Please select who wins on penalties.'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Please select who wins on penalties.')}, status=400)
     else:
         predicted_home_goals = None
         predicted_away_goals = None

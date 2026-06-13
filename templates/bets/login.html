@@ -1,10 +1,11 @@
 {% extends 'bets/base.html' %}
-{% block title %}Sign in — {{ web_title }} World Cup 2026{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Sign in" %} — {{ web_title }} {% trans "World Cup 2026" %}{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto mt-16">
   <div class="glass rounded-2xl p-8">
-    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">{{ web_title|upper }} WORLD CUP 2026</h1>
-    <p class="text-center text-white/40 text-sm mb-6">Sign in to continue</p>
+    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">{{ web_title|upper }} {% trans "WORLD CUP 2026" %}</h1>
+    <p class="text-center text-white/40 text-sm mb-6">{% trans "Sign in to continue" %}</p>
     <form method="post" class="space-y-4">
       {% csrf_token %}
       {% for field in form %}
@@ -13,9 +14,9 @@
         {{ field }}
       </div>
       {% endfor %}
-      <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">Sign in</button>
+      <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">{% trans "Sign in" %}</button>
     </form>
-    <p class="text-center text-white/40 text-sm mt-5">No account yet? <a href="{% url 'register' %}" class="text-emerald-400 hover:underline">Register</a></p>
+    <p class="text-center text-white/40 text-sm mt-5">{% trans "No account yet?" %} <a href="{% url 'register' %}" class="text-emerald-400 hover:underline">{% trans "Register" %}</a></p>
   </div>
 </div>
 {% endblock %}
