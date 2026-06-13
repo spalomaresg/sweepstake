@@ -3,8 +3,8 @@
 {% block content %}
 <div class="max-w-md mx-auto mt-16">
   <div class="glass rounded-2xl p-8">
-    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">SIGN IN</h1>
-    <p class="text-center text-white/40 text-sm mb-6">{{ web_title }} World Cup 2026</p>
+    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">{{ web_title|upper }} WORLD CUP 2026</h1>
+    <p class="text-center text-white/40 text-sm mb-6">Sign in to continue</p>
     <form method="post" class="space-y-4">
       {% csrf_token %}
       {% for field in form %}
