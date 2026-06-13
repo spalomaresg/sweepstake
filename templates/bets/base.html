@@ -15,18 +15,29 @@
 </head>
 <body class="gradient-bg text-white">
   {% if user.is_authenticated %}
-  <nav class="glass sticky top-0 z-50 px-6 py-3 border-b border-white/10">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <a href="{% url 'leaderboard' %}" class="font-display text-xl tracking-widest text-emerald-400">
-        ⚽ THREATFABRIC WORLD CUP 2026
-      </a>
-      <div class="flex items-center gap-5 text-sm font-medium">
-        <a href="{% url 'leaderboard' %}" class="hover:text-emerald-400 transition">Leaderboard</a>
-        <a href="{% url 'my_predictions' %}" class="hover:text-emerald-400 transition">My Predictions</a>
-        <a href="{% url 'group_standings' %}" class="hover:text-emerald-400 transition">Standings</a>
-        <span class="text-white/20">|</span>
-        <span class="text-white/50 text-xs">{{ user.username }}</span>
-        <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs">Sign out</a>
+  <nav class="glass sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-6xl mx-auto">
+      <!-- Main row: logo + desktop links / logo + sign-out (mobile) -->
+      <div class="flex items-center justify-between px-6 py-3">
+        <a href="{% url 'leaderboard' %}" class="font-display text-xl text-emerald-400">
+          <span class="md:hidden tracking-wider">⚽ TF WC 2026</span>
+          <span class="hidden md:inline tracking-widest">⚽ THREATFABRIC WORLD CUP 2026</span>
+        </a>
+        <a href="{% url 'logout' %}" class="md:hidden text-red-400 hover:text-red-300 transition text-xs font-medium flex-shrink-0">Sign out</a>
+        <div class="hidden md:flex items-center gap-5 text-sm font-medium">
+          <a href="{% url 'leaderboard' %}" class="hover:text-emerald-400 transition">Leaderboard</a>
+          <a href="{% url 'my_predictions' %}" class="hover:text-emerald-400 transition">My Predictions</a>
+          <a href="{% url 'group_standings' %}" class="hover:text-emerald-400 transition">Standings</a>
+          <span class="text-white/20">|</span>
+          <span class="text-white/50 text-xs">{{ user.username }}</span>
+          <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs">Sign out</a>
+        </div>
+      </div>
+      <!-- Mobile nav: page links only -->
+      <div class="flex md:hidden overflow-x-auto gap-5 px-6 py-3 text-sm font-medium border-t border-white/5">
+        <a href="{% url 'leaderboard' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">Leaderboard</a>
+        <a href="{% url 'my_predictions' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">My Predictions</a>
+        <a href="{% url 'group_standings' %}" class="text-white/70 hover:text-emerald-400 transition whitespace-nowrap flex-shrink-0">Standings</a>
       </div>
     </div>
   </nav>

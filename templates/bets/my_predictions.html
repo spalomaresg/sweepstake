@@ -4,18 +4,18 @@
 {% block content %}
 
 <div class="flex items-center justify-between mb-8">
-  <h1 class="font-display text-5xl text-emerald-400">MY BETS</h1>
+  <h1 class="font-display text-4xl md:text-5xl text-emerald-400">MY BETS</h1>
   <div class="glass rounded-xl px-6 py-3 text-center">
     <div class="text-white/40 text-xs uppercase tracking-wider">Total points</div>
-    <div class="font-display text-4xl text-emerald-400">{{ total_points }}</div>
+    <div class="font-display text-3xl md:text-4xl text-emerald-400">{{ total_points }}</div>
   </div>
 </div>
 
-<!-- Phase tabs -->
-<div class="flex flex-wrap gap-2 mb-6">
+<!-- Phase tabs: scrollable on mobile, wrapping on desktop -->
+<div class="flex gap-2 mb-6 overflow-x-auto pb-1 flex-nowrap">
   {% for phase in phases_data %}
   <button onclick="showPhase('{{ phase.key }}')" id="tab-{{ phase.key }}"
-    class="px-4 py-2 rounded-lg text-sm font-semibold transition {% if phase.key == active_phase_key %}bg-emerald-500 text-white{% else %}glass text-white/60 hover:text-white{% endif %}">
+    class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition {% if phase.key == active_phase_key %}bg-emerald-500 text-white{% else %}glass text-white/60 hover:text-white{% endif %}">
     {{ phase.label }}
   </button>
   {% endfor %}
@@ -36,7 +36,7 @@
   </div>
 
   {% if not phase.has_matches %}
-  <!-- No matches yet — phase is open but bracket not decided -->
+  <!-- No matches yet -->
   <div class="glass rounded-2xl px-6 py-12 text-center text-white/40">
     <div class="text-4xl mb-3">🏗️</div>
     <div class="font-semibold text-white/60 mb-1">The bracket is being assembled…</div>
@@ -46,7 +46,8 @@
   {% else %}
   <!-- Table -->
   <div class="glass rounded-2xl overflow-hidden">
-    <div class="grid grid-cols-[1fr_2.4fr_1fr_5rem] border-b border-white/10 text-white/30 text-xs uppercase tracking-wider px-5 py-3 gap-4">
+    <!-- Desktop-only column headers -->
+    <div class="hidden md:grid grid-cols-[1fr_2.4fr_1fr_5rem] border-b border-white/10 text-white/30 text-xs uppercase tracking-wider px-5 py-3 gap-4">
       <div>Match</div>
       <div>Prediction</div>
       <div>Result</div>
@@ -55,7 +56,10 @@
 
     {% for row in phase.rows %}
     {% with match=row.match bet=row.bet locked=row.locked %}
-    <div class="{% if not forloop.last %}border-b border-white/5{% endif %} grid grid-cols-[1fr_2.4fr_1fr_5rem] gap-4 px-5 py-4 items-start hover:bg-white/[0.03] transition"
+    <div class="{% if not forloop.last %}border-b border-white/5{% endif %}
+                flex flex-col gap-3 px-4 py-4
+                md:grid md:grid-cols-[1fr_2.4fr_1fr_5rem] md:gap-4 md:px-5 md:items-start
+                hover:bg-white/[0.03] transition"
       id="match-row-{{ match.id }}"
       data-match-id="{{ match.id }}"
       data-kickoff="{{ match.kickoff.isoformat }}"
@@ -63,48 +67,62 @@
       data-allows-score="{% if phase.allows_score %}true{% else %}false{% endif %}"
       data-is-bettable="{% if phase.is_bettable %}true{% else %}false{% endif %}">
 
-      <!-- Match: date/time/group only -->
-      <div class="pt-1">
-        <div class="text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
-        {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">Group {{ match.home_team.group }}</div>{% endif %}
-
+      <!-- Mobile-only top row: date + group + points -->
+      <div class="flex items-start justify-between md:hidden">
+        <div>
+          <div class="kickoff-display text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
+          {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">Group {{ match.home_team.group }}</div>{% endif %}
+        </div>
+        <div class="text-right pl-4">
+          {% if match.finished %}
+            <span class="font-display text-2xl {% if bet and bet.points_earned > 0 %}text-emerald-400{% else %}text-red-400{% endif %}">+{% if bet %}{{ bet.points_earned }}{% else %}0{% endif %}</span>
+          {% else %}
+            <span class="text-white/20 text-sm">—</span>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Prediction + final result underneath -->
+      <!-- Desktop-only: date column -->
+      <div class="hidden md:block pt-1">
+        <div class="kickoff-display text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
+        {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">Group {{ match.home_team.group }}</div>{% endif %}
+      </div>
+
+      <!-- Prediction -->
       <div class="space-y-2">
         {% if not phase.allows_score %}
-          {# ── GROUP STAGE: 3 pill buttons ──────────── #}
-          <div class="flex items-center gap-2 flex-wrap">
+          {# ── GROUP STAGE: 3 pill buttons in equal grid on mobile ─── #}
+          <div class="grid grid-cols-3 gap-2 md:flex md:items-center md:flex-wrap">
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'home')"{% endif %}
               id="btn-home-{{ match.id }}"
-              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition
-                {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold
+              class="min-w-0 md:min-w-[11rem] text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
+                {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
               {{ match.home_team.flag }} {{ match.home_team.name }}
             </button>
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'draw')"{% endif %}
               id="btn-draw-{{ match.id }}"
-              class="w-20 text-center px-3 py-2 rounded-lg border text-sm transition
-                {% if bet and bet.predicted_winner == 'draw' %}bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold
+              class="min-w-0 md:w-20 text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm transition
+                {% if bet and bet.predicted_winner == 'draw' %}bg-blue-500/20 border-blue-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
               Draw
             </button>
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'away')"{% endif %}
               id="btn-away-{{ match.id }}"
-              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition
-                {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold
+              class="min-w-0 md:min-w-[11rem] text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
+                {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
               {{ match.away_team.flag }} {{ match.away_team.name }}
             </button>
 
-            <div id="status-{{ match.id }}" class="text-xs hidden w-full mt-0.5"></div>
+            <div id="status-{{ match.id }}" class="text-xs hidden col-span-3 w-full mt-0.5"></div>
           </div>
 
         {% else %}
           {# ── KNOCKOUT: score inputs + auto-winner ─── #}
-          <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex items-center gap-1 md:gap-2 flex-wrap">
             <button id="btn-home-{{ match.id }}"
-              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition cursor-default
+              class="flex-1 min-w-0 md:flex-none md:min-w-[11rem] text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
                 {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
               {{ match.home_team.flag }} {{ match.home_team.name }}
             </button>
@@ -112,23 +130,22 @@
               <input type="number" min="0" max="20" id="hg-{{ match.id }}"
                 value="{% if bet and bet.predicted_home_goals is not None %}{{ bet.predicted_home_goals }}{% endif %}"
                 oninput="onScore({{ match.id }})"
-                class="w-12 px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                class="w-10 md:w-12 px-1 md:px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
               <span class="text-white/30 font-mono">–</span>
               <input type="number" min="0" max="20" id="ag-{{ match.id }}"
                 value="{% if bet and bet.predicted_away_goals is not None %}{{ bet.predicted_away_goals }}{% endif %}"
                 oninput="onScore({{ match.id }})"
-                class="w-12 px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                class="w-10 md:w-12 px-1 md:px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
             {% else %}
               <span class="text-white/50 font-mono text-sm px-1">
                 {% if bet and bet.predicted_home_goals is not None %}{{ bet.predicted_home_goals }}–{{ bet.predicted_away_goals }}{% else %}—{% endif %}
               </span>
             {% endif %}
             <button id="btn-away-{{ match.id }}"
-              class="min-w-[11rem] text-center px-3 py-2 rounded-lg border text-sm transition cursor-default
+              class="flex-1 min-w-0 md:flex-none md:min-w-[11rem] text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
                 {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
               {{ match.away_team.flag }} {{ match.away_team.name }}
             </button>
-
           </div>
           {% if not locked and phase.is_bettable %}
           <div id="draw-picker-{{ match.id }}" class="hidden text-xs text-yellow-400/80 text-center w-full mt-1">Who wins on penalties? Select manually.</div>
@@ -138,8 +155,8 @@
 
       </div>
 
-      <!-- Result column: winner flag+name and score -->
-      <div class="pt-1">
+      <!-- Result column -->
+      <div class="pt-0 md:pt-1 text-center md:text-left">
         {% if match.finished %}
           {% if match.winner == 'home' %}
             <div class="text-sm font-semibold {% if bet and bet.predicted_winner == 'home' %}text-emerald-400{% else %}text-white/70{% endif %}">
@@ -154,14 +171,14 @@
           {% endif %}
           <div class="text-xs text-white/40 font-mono mt-0.5">{{ match.home_goals }}–{{ match.away_goals }}{% if match.knockout_winner and match.home_goals == match.away_goals %} (pens){% endif %}</div>
         {% else %}
-          <span class="text-white/20 text-xs">—</span>
+          <span class="text-white/20 text-xs hidden md:inline">—</span>
         {% endif %}
       </div>
 
-      <!-- Points -->
-      <div class="text-right pt-1">
-        {% if match.finished and bet %}
-          <span class="font-display text-2xl {% if bet.points_earned > 0 %}text-emerald-400{% else %}text-red-400{% endif %}">+{{ bet.points_earned }}</span>
+      <!-- Points column (desktop only — mobile shows pts in top row) -->
+      <div class="text-right pt-1 hidden md:block">
+        {% if match.finished %}
+          <span class="font-display text-2xl {% if bet and bet.points_earned > 0 %}text-emerald-400{% else %}text-red-400{% endif %}">+{% if bet %}{{ bet.points_earned }}{% else %}0{% endif %}</span>
         {% else %}
           <span class="text-white/20 text-sm">—</span>
         {% endif %}
@@ -199,7 +216,7 @@ async function postBet(matchId, payload) {
       body: JSON.stringify(payload),
     });
     const d = await r.json();
-    showStatus(matchId, d.ok ? '✓ Saved' : (d.error || 'Error'), d.ok);
+    if (!d.ok) showStatus(matchId, d.error || 'Error', false);
   } catch { showStatus(matchId, 'Network error', false); }
 }
 
@@ -210,14 +227,14 @@ function selectGroup(matchId, winner) {
     if (!btn) return;
     btn.className = btn.className
       .replace(/bg-\S+\/20\s*/g,'').replace(/border-\S+\/50\s*/g,'')
-      .replace(/text-emerald-300\s*/g,'').replace(/text-blue-300\s*/g,'')
+      .replace(/ text-white\/50\s*/g,'').replace(/ text-white(?![\/\w])\s*/g,'')
       .replace(/font-semibold\s*/g,'').replace(/hover:border-white\/30\s*/g,'')
       .replace(/hover:text-white\s*/g,'').trim();
     const active = opt === winner;
     if (active) {
       btn.className += opt === 'draw'
-        ? ' bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-        : ' bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold';
+        ? ' bg-blue-500/20 border-blue-500/50 text-white font-semibold'
+        : ' bg-emerald-500/20 border-emerald-500/50 text-white font-semibold';
     } else {
       btn.className += ' border-white/10 text-white/50 hover:border-white/30 hover:text-white cursor-pointer';
     }
@@ -247,8 +264,6 @@ function onScore(matchId) {
     updateKOButtons(matchId);
     autoSaveKO(matchId);
   } else {
-    // Equal score — clear auto-winner, show penalty picker
-    // Do NOT auto-save; wait for user to manually pick the penalty winner
     koWinner[matchId] = null;
     updateKOButtons(matchId);
     if (dp) dp.classList.remove('hidden');
@@ -305,13 +320,27 @@ function showPhase(key) {
   phases.forEach(k => {
     document.getElementById('panel-' + k).classList.toggle('hidden', k !== key);
     document.getElementById('tab-' + k).className =
-      'px-4 py-2 rounded-lg text-sm font-semibold transition ' +
+      'flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition ' +
       (k === key ? 'bg-emerald-500 text-white' : 'glass text-white/60 hover:text-white');
   });
 }
 
+// ── Kickoff times in browser local timezone ────────────────────────────────
+function formatLocalKickoff(isoStr) {
+  const d = new Date(isoStr);
+  const day = String(d.getDate()).padStart(2, '0');
+  const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  const hh  = String(d.getHours()).padStart(2, '0');
+  const mm  = String(d.getMinutes()).padStart(2, '0');
+  return `${day} ${mon} · ${hh}:${mm}`;
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-kickoff]').forEach(row => {
+    const local = formatLocalKickoff(row.dataset.kickoff);
+    row.querySelectorAll('.kickoff-display').forEach(el => el.textContent = local);
+  });
   document.querySelectorAll('[id^="hg-"]').forEach(el => {
     const matchId = el.id.replace('hg-','');
     setupKOButtons(matchId);
@@ -331,16 +360,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Start real-time lock checker
   startLockChecker();
 });
 
 // ── Real-time lock ─────────────────────────────────────────────────────────
-// Track which matches we have already locked in this session
 const alreadyLocked = new Set();
 
 function startLockChecker() {
-  // Check every 5 seconds
   setInterval(checkAndLockMatches, 5000);
 }
 
@@ -353,12 +379,8 @@ function checkAndLockMatches() {
     const isBettable = row.dataset.isBettable === 'true';
     const kickoff = new Date(row.dataset.kickoff).getTime();
 
-    // Skip if: already finished, already locked by us, or not bettable
     if (finished || alreadyLocked.has(matchId) || !isBettable) return;
 
-    // Only lock once the match kickoff has passed AND it was in a bettable phase
-    // (the server's AJAX endpoint is the true gatekeeper, but we lock the UI
-    //  to avoid confusion — only for matches whose kickoff genuinely just passed)
     if (now >= kickoff) {
       lockMatchUI(matchId, allowsScore);
       alreadyLocked.add(matchId);
@@ -368,10 +390,9 @@ function checkAndLockMatches() {
 
 function lockMatchUI(matchId, allowsScore) {
   if (allowsScore) {
-    // Knockout: replace score inputs with static text
     const hgEl = document.getElementById('hg-' + matchId);
     const agEl = document.getElementById('ag-' + matchId);
-    const dashEl = hgEl?.nextElementSibling; // the "–" span
+    const dashEl = hgEl?.nextElementSibling;
 
     if (hgEl && agEl) {
       const hgVal = hgEl.value;
@@ -379,18 +400,14 @@ function lockMatchUI(matchId, allowsScore) {
       const scoreText = (hgVal !== '' && agVal !== '')
         ? `${hgVal}–${agVal}`
         : '—';
-      // Build static score display
       const staticScore = document.createElement('span');
       staticScore.className = 'text-white/50 font-mono text-sm px-1';
       staticScore.textContent = scoreText;
-      // Remove inputs and dash, insert static
       if (dashEl) dashEl.remove();
       agEl.replaceWith(staticScore);
       hgEl.remove();
-      // Remove draw picker if visible
       const dp = document.getElementById('draw-picker-' + matchId);
       if (dp) dp.remove();
-      // Make team buttons non-interactive
       ['home','away'].forEach(side => {
         const btn = document.getElementById('btn-' + side + '-' + matchId);
         if (btn) {
@@ -400,13 +417,11 @@ function lockMatchUI(matchId, allowsScore) {
       });
     }
   } else {
-    // Group stage: disable all 3 pill buttons
     ['home','draw','away'].forEach(opt => {
       const btn = document.getElementById('btn-' + opt + '-' + matchId);
       if (btn) {
         btn.removeAttribute('onclick');
         btn.style.cursor = 'default';
-        // Remove hover classes
         btn.className = btn.className
           .replace(/hover:border-white\/30\s*/g, '')
           .replace(/hover:text-white\s*/g, '')

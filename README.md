@@ -2,6 +2,8 @@
 
 An internal office sweepstake app for the FIFA World Cup 2026. Built with Django and SQLite. Colleagues predict match results, earn points, and compete on a leaderboard — individually and by team.
 
+The interface is fully responsive — desktop and mobile are both supported. Match kickoff times are displayed in the browser's local timezone.
+
 ---
 
 ## Requirements
@@ -21,23 +23,47 @@ cd worldcup_sweepstake
 pip install -r requirements.txt
 ```
 
-### 2. Configure for production
+### 2. Create a `.env` file
 
-Open `worldcup_sweepstake/settings.py` and update:
+Create a `.env` file in the project root (next to `manage.py`). This file is gitignored and must be created on each environment:
 
-```python
-SECRET_KEY = 'replace-this-with-a-long-random-string'
-DEBUG = False
-ALLOWED_HOSTS = ['yourdomain.com', 'your-server-ip']
+```env
+SECRET_KEY=replace-this-with-a-long-random-string
+DEBUG=False
+ALLOWED_HOSTS=yourdomain.com,your-server-ip
 ```
 
-### 3. Initialise the database
+For local development:
+
+```env
+SECRET_KEY=any-local-dev-secret
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
+Generate a secure secret key with:
+
+```bash
+python manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+### 3. API key (football-data.org)
+
+Match results are synced automatically from [football-data.org](https://www.football-data.org). The API key is set directly in `worldcup_sweepstake/settings.py`:
+
+```python
+FOOTBALL_DATA_API_KEY = 'your-api-key-here'
+```
+
+Sign up for a free key at football-data.org (no credit card required). The free tier allows 10 requests/minute, which is more than enough.
+
+### 4. Initialise the database
 
 ```bash
 python manage.py migrate
 ```
 
-### 4. Configure sweepstake teams
+### 5. Configure sweepstake teams
 
 Edit `teams.csv` in the project root — one row per office team:
 
@@ -55,21 +81,21 @@ python manage.py load_teams
 
 Safe to re-run — uses `update_or_create` so existing teams are updated, not duplicated.
 
-### 5. Load World Cup group stage data
+### 6. Load World Cup group stage data
 
 ```bash
 python manage.py load_data
 ```
 
-Loads all 48 national teams and 72 group stage matches with official kickoff times (UTC).
+Loads all 48 national teams and 72 group stage matches with official kickoff times sourced from the football-data.org API.
 
-### 6. Create an admin account
+### 7. Create an admin account
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 7. Run the server
+### 8. Run the server
 
 ```bash
 python manage.py runserver
@@ -164,6 +190,49 @@ Loads 48 national teams (with flags) and 72 group stage matches. Safe to re-run 
 
 ---
 
+### Sync match results
+
+Fetches finished match results from the football-data.org API and updates the database. Also recalculates points for all affected predictions.
+
+```bash
+python manage.py sync_results
+```
+
+Preview without saving:
+
+```bash
+python manage.py sync_results --dry-run
+```
+
+Override the competition code if needed (default: `WC`):
+
+```bash
+python manage.py sync_results --competition WC2026
+```
+
+---
+
+### Start the result sync scheduler (production only)
+
+Long-running process that automatically runs `sync_results` at timed intervals after each match. Refuses to start when `DEBUG=True`.
+
+```bash
+python manage.py start_sync_scheduler
+```
+
+Sync schedule per match (relative to expected final whistle = kickoff + 90 min):
+
+| Offset | Purpose |
+|---|---|
+| +10 min | Catches most matches that end on time |
+| +30 min | Catches matches with extra time |
+| +1 hour | Catches delayed or VAR-heavy games |
+| +2 hours | Final catch-all |
+
+In production this runs as a systemd service — see [Deployment](#deploying-to-a-server-nginx--gunicorn) below.
+
+---
+
 ### Simulate a phase (testing only)
 
 Useful for testing scoring, bracket progression, and UI without waiting for real matches.
@@ -221,8 +290,10 @@ worldcup_sweepstake/
 │   ├── migrations/                # Database migrations
 │   ├── management/
 │   │   └── commands/
-│   │       ├── load_data.py       # Load teams and group stage fixtures
-│   │       └── simulate_phase.py  # Testing: simulate match results
+│   │       ├── load_data.py           # Load teams and group stage fixtures
+│   │       ├── sync_results.py        # Sync match results from football-data.org
+│   │       ├── start_sync_scheduler.py# Production: auto-sync after each match
+│   │       └── simulate_phase.py      # Testing: simulate match results
 │   ├── models.py                  # Data models
 │   ├── views.py                   # Request handlers
 │   ├── forms.py                   # Registration and prediction forms
@@ -243,6 +314,7 @@ worldcup_sweepstake/
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
+├── .env                           # Local config — gitignored, create manually
 ├── manage.py
 ├── requirements.txt
 └── README.md
@@ -285,12 +357,50 @@ server {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
+
+### Automatic result syncing (systemd service)
+
+Create `/etc/systemd/system/wc-sync.service`:
+
+```ini
+[Unit]
+Description=World Cup result sync scheduler
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/worldcup_sweepstake
+ExecStart=/path/to/worldcup_sweepstake/.venv/bin/python manage.py start_sync_scheduler
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now wc-sync.service
+
+# Check status
+sudo systemctl status wc-sync.service
+
+# Watch logs live
+sudo journalctl -u wc-sync.service -f
+```
+
+The scheduler only starts when `DEBUG=False`. It sleeps until the next scheduled sync time and wakes up automatically — no polling overhead between matches.
 
 ---
 
 ## Timezone
 
-The app stores all times in UTC. The Django timezone is set to `Europe/Madrid` for display. To change it, update `TIME_ZONE` in `settings.py`.
+All kickoff times are stored in UTC. Match times are displayed in the **browser's local timezone** via JavaScript — each user sees times converted to their own timezone automatically.

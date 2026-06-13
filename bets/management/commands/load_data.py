@@ -70,110 +70,109 @@ TEAMS = [
     ("Panama",               "PAN", "L", "🇵🇦"),
 ]
 
-# All 48 matches — UTC times derived from official ET/BST sources
-# ET = UTC-4 in summer. BST = UTC+1.
-# Match (home, away, group, "YYYY-MM-DD HH:MM" UTC)
+# All 72 group stage matches — UTC times sourced from football-data.org API.
+# (home, away, phase, "YYYY-MM-DD HH:MM" UTC)
 MATCHES = [
-    # ── GROUP A ──────────────────────────────────────────────────────────────
-    ("Mexico",       "South Africa",        "group_stage", "2026-06-11 19:00"),  # 3pm ET
-    ("South Korea",  "Czechia",             "group_stage", "2026-06-12 02:00"),  # 10pm ET Jun 11
-    ("Czechia",      "South Africa",        "group_stage", "2026-06-18 16:00"),  # 12pm ET
-    ("Mexico",       "South Korea",         "group_stage", "2026-06-19 01:00"),  # 9pm ET Jun 18
-    ("Mexico",       "Czechia",             "group_stage", "2026-06-25 01:00"),  # 9pm ET Jun 24
-    ("South Africa", "South Korea",         "group_stage", "2026-06-25 01:00"),  # 9pm ET Jun 24
+    # GROUP A
+    ("Mexico",                  "South Africa",         "group_stage", "2026-06-11 19:00"),
+    ("South Korea",             "Czechia",              "group_stage", "2026-06-12 02:00"),
+    ("Czechia",                 "South Africa",         "group_stage", "2026-06-18 16:00"),
+    ("Mexico",                  "South Korea",          "group_stage", "2026-06-19 01:00"),
+    ("Czechia",                 "Mexico",               "group_stage", "2026-06-25 01:00"),
+    ("South Africa",            "South Korea",          "group_stage", "2026-06-25 01:00"),
 
-    # ── GROUP B ──────────────────────────────────────────────────────────────
-    ("Canada",       "Bosnia & Herzegovina","group_stage", "2026-06-12 19:00"),  # 3pm ET
-    ("Switzerland",  "Qatar",               "group_stage", "2026-06-13 02:00"),  # 10pm ET Jun 12
-    ("Bosnia & Herzegovina","Qatar",         "group_stage", "2026-06-19 16:00"),
-    ("Switzerland",  "Canada",              "group_stage", "2026-06-20 01:00"),
-    ("Switzerland",  "Bosnia & Herzegovina","group_stage", "2026-06-26 01:00"),
-    ("Canada",       "Qatar",               "group_stage", "2026-06-26 01:00"),
+    # GROUP B
+    ("Canada",                  "Bosnia & Herzegovina", "group_stage", "2026-06-12 19:00"),
+    ("Qatar",                   "Switzerland",          "group_stage", "2026-06-13 19:00"),
+    ("Switzerland",             "Bosnia & Herzegovina", "group_stage", "2026-06-18 19:00"),
+    ("Canada",                  "Qatar",                "group_stage", "2026-06-18 22:00"),
+    ("Switzerland",             "Canada",               "group_stage", "2026-06-24 19:00"),
+    ("Bosnia & Herzegovina",    "Qatar",                "group_stage", "2026-06-24 19:00"),
 
-    # ── GROUP C ──────────────────────────────────────────────────────────────
-    ("Brazil",       "Morocco",             "group_stage", "2026-06-13 19:00"),  # 3pm ET
-    ("Haiti",        "Scotland",            "group_stage", "2026-06-14 02:00"),  # 10pm ET Jun 13
-    ("Morocco",      "Scotland",            "group_stage", "2026-06-20 16:00"),
-    ("Brazil",       "Haiti",               "group_stage", "2026-06-21 01:00"),
-    ("Brazil",       "Scotland",            "group_stage", "2026-06-27 01:00"),
-    ("Morocco",      "Haiti",               "group_stage", "2026-06-27 01:00"),
+    # GROUP C
+    ("Brazil",                  "Morocco",              "group_stage", "2026-06-13 22:00"),
+    ("Haiti",                   "Scotland",             "group_stage", "2026-06-14 01:00"),
+    ("Scotland",                "Morocco",              "group_stage", "2026-06-19 22:00"),
+    ("Brazil",                  "Haiti",                "group_stage", "2026-06-20 00:30"),
+    ("Morocco",                 "Haiti",                "group_stage", "2026-06-24 22:00"),
+    ("Scotland",                "Brazil",               "group_stage", "2026-06-24 22:00"),
 
-    # ── GROUP D ──────────────────────────────────────────────────────────────
-    ("USA",          "Paraguay",            "group_stage", "2026-06-13 01:00"),  # 9pm ET Jun 12
-    ("Australia",    "Turkey",              "group_stage", "2026-06-14 09:00"),  # 5am ET — west coast late slot
-    ("Turkey",       "Paraguay",            "group_stage", "2026-06-20 19:00"),
-    ("USA",          "Australia",           "group_stage", "2026-06-19 19:00"),
-    ("USA",          "Turkey",              "group_stage", "2026-06-25 01:00"),  # sync Jun 24
-    ("Australia",    "Paraguay",            "group_stage", "2026-06-25 01:00"),
+    # GROUP D
+    ("USA",                     "Paraguay",             "group_stage", "2026-06-13 01:00"),
+    ("Australia",               "Turkey",               "group_stage", "2026-06-14 04:00"),
+    ("USA",                     "Australia",            "group_stage", "2026-06-19 19:00"),
+    ("Turkey",                  "Paraguay",             "group_stage", "2026-06-20 03:00"),
+    ("Turkey",                  "USA",                  "group_stage", "2026-06-26 02:00"),
+    ("Paraguay",                "Australia",            "group_stage", "2026-06-26 02:00"),
 
-    # ── GROUP E ──────────────────────────────────────────────────────────────
-    ("Germany",      "Curacao",             "group_stage", "2026-06-15 19:00"),
-    ("Ecuador",      "Ivory Coast",         "group_stage", "2026-06-16 02:00"),
-    ("Germany",      "Ecuador",             "group_stage", "2026-06-22 01:00"),
-    ("Ivory Coast",  "Curacao",             "group_stage", "2026-06-21 19:00"),
-    ("Germany",      "Ivory Coast",         "group_stage", "2026-06-26 21:30"),  # sync
-    ("Ecuador",      "Curacao",             "group_stage", "2026-06-26 21:30"),
+    # GROUP E
+    ("Germany",                 "Curacao",              "group_stage", "2026-06-14 17:00"),
+    ("Ivory Coast",             "Ecuador",              "group_stage", "2026-06-14 23:00"),
+    ("Germany",                 "Ivory Coast",          "group_stage", "2026-06-20 20:00"),
+    ("Ecuador",                 "Curacao",              "group_stage", "2026-06-21 00:00"),
+    ("Ecuador",                 "Germany",              "group_stage", "2026-06-25 20:00"),
+    ("Curacao",                 "Ivory Coast",          "group_stage", "2026-06-25 20:00"),
 
-    # ── GROUP F ──────────────────────────────────────────────────────────────
-    ("Netherlands",  "Japan",               "group_stage", "2026-06-14 22:00"),
-    ("Sweden",       "Tunisia",             "group_stage", "2026-06-15 02:00"),
-    ("Netherlands",  "Sweden",              "group_stage", "2026-06-21 22:00"),
-    ("Japan",        "Tunisia",             "group_stage", "2026-06-22 01:00"),
-    ("Netherlands",  "Tunisia",             "group_stage", "2026-06-27 01:00"),  # sync
-    ("Japan",        "Sweden",              "group_stage", "2026-06-27 01:00"),
+    # GROUP F
+    ("Netherlands",             "Japan",                "group_stage", "2026-06-14 20:00"),
+    ("Sweden",                  "Tunisia",              "group_stage", "2026-06-15 02:00"),
+    ("Netherlands",             "Sweden",               "group_stage", "2026-06-20 17:00"),
+    ("Tunisia",                 "Japan",                "group_stage", "2026-06-21 04:00"),
+    ("Tunisia",                 "Netherlands",          "group_stage", "2026-06-25 23:00"),
+    ("Japan",                   "Sweden",               "group_stage", "2026-06-25 23:00"),
 
-    # ── GROUP G ──────────────────────────────────────────────────────────────
-    ("Belgium",      "Egypt",               "group_stage", "2026-06-15 22:00"),
-    ("Iran",         "New Zealand",         "group_stage", "2026-06-16 01:00"),
-    ("Belgium",      "Iran",                "group_stage", "2026-06-20 22:00"),
-    ("Egypt",        "New Zealand",         "group_stage", "2026-06-21 01:00"),
-    ("Belgium",      "New Zealand",         "group_stage", "2026-06-26 01:00"),  # sync
-    ("Iran",         "Egypt",               "group_stage", "2026-06-26 01:00"),
+    # GROUP G
+    ("Belgium",                 "Egypt",                "group_stage", "2026-06-15 19:00"),
+    ("Iran",                    "New Zealand",          "group_stage", "2026-06-16 01:00"),
+    ("Belgium",                 "Iran",                 "group_stage", "2026-06-21 19:00"),
+    ("New Zealand",             "Egypt",                "group_stage", "2026-06-22 01:00"),
+    ("New Zealand",             "Belgium",              "group_stage", "2026-06-27 03:00"),
+    ("Egypt",                   "Iran",                 "group_stage", "2026-06-27 03:00"),
 
-    # ── GROUP H ──────────────────────────────────────────────────────────────
-    ("Spain",        "Cape Verde",          "group_stage", "2026-06-15 16:00"),  # 12pm ET
-    ("Saudi Arabia", "Uruguay",             "group_stage", "2026-06-16 22:00"),
-    ("Spain",        "Saudi Arabia",        "group_stage", "2026-06-21 17:00"),
-    ("Cape Verde",   "Uruguay",             "group_stage", "2026-06-22 22:00"),
-    ("Spain",        "Uruguay",             "group_stage", "2026-06-27 01:00"),  # sync
-    ("Cape Verde",   "Saudi Arabia",        "group_stage", "2026-06-27 01:00"),
+    # GROUP H
+    ("Spain",                   "Cape Verde",           "group_stage", "2026-06-15 16:00"),
+    ("Saudi Arabia",            "Uruguay",              "group_stage", "2026-06-15 22:00"),
+    ("Spain",                   "Saudi Arabia",         "group_stage", "2026-06-21 16:00"),
+    ("Uruguay",                 "Cape Verde",           "group_stage", "2026-06-21 22:00"),
+    ("Uruguay",                 "Spain",                "group_stage", "2026-06-27 00:00"),
+    ("Cape Verde",              "Saudi Arabia",         "group_stage", "2026-06-27 00:00"),
 
-    # ── GROUP I ──────────────────────────────────────────────────────────────
-    ("France",       "Senegal",             "group_stage", "2026-06-18 22:00"),
-    ("Iraq",         "Norway",              "group_stage", "2026-06-19 01:00"),
-    ("France",       "Iraq",                "group_stage", "2026-06-22 19:00"),
-    ("Senegal",      "Norway",              "group_stage", "2026-06-24 22:00"),
-    ("France",       "Norway",              "group_stage", "2026-06-27 21:30"),  # sync
-    ("Senegal",      "Iraq",                "group_stage", "2026-06-27 21:30"),
+    # GROUP I
+    ("France",                  "Senegal",              "group_stage", "2026-06-16 19:00"),
+    ("Iraq",                    "Norway",               "group_stage", "2026-06-16 22:00"),
+    ("France",                  "Iraq",                 "group_stage", "2026-06-22 21:00"),
+    ("Norway",                  "Senegal",              "group_stage", "2026-06-23 00:00"),
+    ("Norway",                  "France",               "group_stage", "2026-06-26 19:00"),
+    ("Senegal",                 "Iraq",                 "group_stage", "2026-06-26 19:00"),
 
-    # ── GROUP J ──────────────────────────────────────────────────────────────
-    ("Argentina",    "Algeria",             "group_stage", "2026-06-17 01:00"),
-    ("Austria",      "Jordan",              "group_stage", "2026-06-17 22:00"),
-    ("Argentina",    "Austria",             "group_stage", "2026-06-23 01:00"),
-    ("Algeria",      "Jordan",              "group_stage", "2026-06-23 22:00"),
-    ("Argentina",    "Jordan",              "group_stage", "2026-06-28 01:00"),  # sync
-    ("Algeria",      "Austria",             "group_stage", "2026-06-28 01:00"),
+    # GROUP J
+    ("Argentina",               "Algeria",              "group_stage", "2026-06-17 01:00"),
+    ("Austria",                 "Jordan",               "group_stage", "2026-06-17 04:00"),
+    ("Argentina",               "Austria",              "group_stage", "2026-06-22 17:00"),
+    ("Jordan",                  "Algeria",              "group_stage", "2026-06-23 03:00"),
+    ("Jordan",                  "Argentina",            "group_stage", "2026-06-28 02:00"),
+    ("Algeria",                 "Austria",              "group_stage", "2026-06-28 02:00"),
 
-    # ── GROUP K ──────────────────────────────────────────────────────────────
-    ("Portugal",     "Uzbekistan",          "group_stage", "2026-06-18 01:00"),
-    ("DR Congo",     "Colombia",            "group_stage", "2026-06-17 19:00"),
-    ("Portugal",     "DR Congo",            "group_stage", "2026-06-24 01:00"),
-    ("Uzbekistan",   "Colombia",            "group_stage", "2026-06-24 19:00"),
-    ("Portugal",     "Colombia",            "group_stage", "2026-06-28 21:30"),  # sync
-    ("DR Congo",     "Uzbekistan",          "group_stage", "2026-06-28 21:30"),
+    # GROUP K
+    ("Portugal",                "DR Congo",             "group_stage", "2026-06-17 17:00"),
+    ("Uzbekistan",              "Colombia",             "group_stage", "2026-06-18 02:00"),
+    ("Portugal",                "Uzbekistan",           "group_stage", "2026-06-23 17:00"),
+    ("Colombia",                "DR Congo",             "group_stage", "2026-06-24 02:00"),
+    ("Colombia",                "Portugal",             "group_stage", "2026-06-27 23:30"),
+    ("DR Congo",                "Uzbekistan",           "group_stage", "2026-06-27 23:30"),
 
-    # ── GROUP L ──────────────────────────────────────────────────────────────
-    ("England",      "Croatia",             "group_stage", "2026-06-17 20:00"),  # 21:00 BST
-    ("Ghana",        "Panama",              "group_stage", "2026-06-18 19:00"),
-    ("England",      "Ghana",               "group_stage", "2026-06-23 20:00"),
-    ("Croatia",      "Panama",              "group_stage", "2026-06-24 01:00"),
-    ("England",      "Panama",              "group_stage", "2026-06-27 21:00"),  # 22:00 BST — sync
-    ("Croatia",      "Ghana",               "group_stage", "2026-06-27 21:00"),
+    # GROUP L
+    ("England",                 "Croatia",              "group_stage", "2026-06-17 20:00"),
+    ("Ghana",                   "Panama",               "group_stage", "2026-06-17 23:00"),
+    ("England",                 "Ghana",                "group_stage", "2026-06-23 20:00"),
+    ("Panama",                  "Croatia",              "group_stage", "2026-06-23 23:00"),
+    ("Panama",                  "England",              "group_stage", "2026-06-27 21:00"),
+    ("Croatia",                 "Ghana",                "group_stage", "2026-06-27 21:00"),
 ]
 
 
 class Command(BaseCommand):
-    help = 'Load all WC2026 group stage teams (48) and matches (48) with correct data'
+    help = 'Load all WC2026 group stage teams (48) and matches (72) with correct data'
 
     def handle(self, *args, **kwargs):
         self.stdout.write("Loading national teams...")
