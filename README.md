@@ -1,4 +1,4 @@
-# ThreatFabric World Cup 2026 Sweepstake
+# World Cup 2026 Sweepstake
 
 An internal office sweepstake app for the FIFA World Cup 2026. Built with Django and SQLite. Colleagues predict match results, earn points, and compete on a leaderboard — individually and by team.
 
@@ -10,6 +10,7 @@ The interface is fully responsive — desktop and mobile are both supported. Mat
 
 - Python 3.10+
 - pip
+- `gettext` (only needed to recompile translations — usually pre-installed on Linux/macOS)
 
 ---
 
@@ -31,6 +32,8 @@ Create a `.env` file in the project root (next to `manage.py`). This file is git
 SECRET_KEY=replace-this-with-a-long-random-string
 DEBUG=False
 ALLOWED_HOSTS=yourdomain.com,your-server-ip
+WEB_TITLE=YourCompany
+LANGUAGE=en
 ```
 
 For local development:
@@ -39,6 +42,8 @@ For local development:
 SECRET_KEY=any-local-dev-secret
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
+WEB_TITLE=YourCompany
+LANGUAGE=en
 ```
 
 Generate a secure secret key with:
@@ -46,6 +51,16 @@ Generate a secure secret key with:
 ```bash
 python manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
+
+#### `.env` variables reference
+
+| Variable | Default | Description |
+|---|---|---|
+| `SECRET_KEY` | — | Django secret key (required) |
+| `DEBUG` | `False` | Enable Django debug mode |
+| `ALLOWED_HOSTS` | — | Comma-separated list of allowed hosts |
+| `WEB_TITLE` | `ThreatFabric` | Company/brand name shown across the site |
+| `LANGUAGE` | `en` | Interface language — `en` (English) or `es` (Spanish) |
 
 ### 3. API key (football-data.org)
 
@@ -63,9 +78,9 @@ Sign up for a free key at football-data.org (no credit card required). The free 
 python manage.py migrate
 ```
 
-### 5. Configure sweepstake teams
+### 5. Configure sweepstake teams (optional)
 
-Edit `teams.csv` in the project root — one row per office team:
+If you want team-based competition, edit `teams.csv` in the project root — one row per office team:
 
 ```csv
 team,color
@@ -80,6 +95,8 @@ python manage.py load_teams
 ```
 
 Safe to re-run — uses `update_or_create` so existing teams are updated, not duplicated.
+
+If no teams are loaded, the team selector is hidden on the registration page and the Teams tab is hidden on the leaderboard.
 
 ### 6. Load World Cup group stage data
 
@@ -121,8 +138,8 @@ Before anyone can register, add their details to `valid_emails.csv` in the proje
 
 ```csv
 email,invite_code
-alice@threatfabric.com,ALICE2026
-bob@threatfabric.com,BOB2026
+alice@example.com,ALICE2026
+bob@example.com,BOB2026
 ```
 
 - **email** — the exact email address the user will register with (case-insensitive)
@@ -130,15 +147,22 @@ bob@threatfabric.com,BOB2026
 
 Users cannot register without both a matching email and the correct invite code. The same check applies at login — if an email is removed from the CSV, that user can no longer sign in.
 
-2. Once registered, go to **Admin → Users**, open each user's profile and:
-   - Assign them to a **Sweepstake Team**
-   - Tick **Excluded from team stats** if you want to exclude them from leaderboard calculations (e.g. test accounts)
+Supports both comma (`,`) and semicolon (`;`) delimiters — the format is detected automatically.
+
+#### After registration
+
+Once registered, go to **Admin → Users**, open each user's profile and:
+
+- Optionally assign them to a **Sweepstake Team**
+- Tick **Excluded from team stats** if you want to exclude them from leaderboard calculations (e.g. test accounts)
+
+Team assignment is optional — if no users have teams, the Teams leaderboard tab is hidden automatically.
 
 ### Managing matches
 
 Go to **Admin → Matches** to:
 
-- Add knockout round matches manually once the bracket is known
+- Add knockout round matches manually once the bracket is known (or let `sync_results` create them automatically from the API)
 - Enter match results (home goals, away goals)
 - For knockout matches that go to extra time / penalties:
   - Set `home_goals` and `away_goals` to the 90-minute score
@@ -190,9 +214,12 @@ Loads 48 national teams (with flags) and 72 group stage matches. Safe to re-run 
 
 ---
 
-### Sync match results
+### Sync match results and create fixtures
 
-Fetches finished match results from the football-data.org API and updates the database. Also recalculates points for all affected predictions.
+Fetches data from the football-data.org API:
+
+- **Finished matches** — updates scores and recalculates points for all affected predictions
+- **Upcoming knockout matches** — creates fixtures in the database once the API publishes the bracket (after each round completes)
 
 ```bash
 python manage.py sync_results
@@ -229,6 +256,8 @@ Sync schedule per match (relative to expected final whistle = kickoff + 90 min):
 | +1 hour | Catches delayed or VAR-heavy games |
 | +2 hours | Final catch-all |
 
+When no matches are pending (e.g. between phases), the scheduler calls `sync_results` once per hour to pick up newly published knockout fixtures from the API.
+
 In production this runs as a systemd service — see [Deployment](#deploying-to-a-server-nginx--gunicorn) below.
 
 ---
@@ -261,9 +290,23 @@ python manage.py simulate_phase round_of_32 --create-only
 python manage.py simulate_phase group_stage --reset
 ```
 
-**Note:** `simulate_phase round_of_32` and later knockout phases auto-build the bracket from the previous phase's results. In production, the admin creates knockout matches manually in the admin panel.
+**Note:** In production, knockout fixtures are created automatically by `sync_results` once the API publishes the bracket.
 
 **Tip:** After simulating the group stage, run `simulate_phase round_of_32 --create-only` to create the R32 fixtures (so users can bet) before entering real results.
+
+---
+
+### Reset match data
+
+To wipe all matches (and their predictions) and start fresh:
+
+```bash
+python manage.py shell -c "from bets.models import Match; count, _ = Match.objects.all().delete(); print(f'Deleted {count} records')"
+python manage.py load_data
+python manage.py sync_results   # picks up any knockout fixtures already published
+```
+
+> ⚠️ This deletes all user predictions (cascade). Only do this before the tournament starts or if the data is wrong.
 
 ---
 
@@ -272,7 +315,7 @@ python manage.py simulate_phase group_stage --reset
 | URL | Description |
 |---|---|
 | `/` | Home / landing page |
-| `/register/` | User registration (requires @threatfabric.com email) |
+| `/register/` | User registration (requires invite email and code) |
 | `/login/` | Sign in |
 | `/logout/` | Sign out |
 | `/leaderboard/` | Individual and team leaderboard with per-phase breakdown |
@@ -291,13 +334,15 @@ worldcup_sweepstake/
 │   ├── management/
 │   │   └── commands/
 │   │       ├── load_data.py           # Load teams and group stage fixtures
-│   │       ├── sync_results.py        # Sync match results from football-data.org
+│   │       ├── load_teams.py          # Load sweepstake teams from teams.csv
+│   │       ├── sync_results.py        # Sync results + create knockout fixtures
 │   │       ├── start_sync_scheduler.py# Production: auto-sync after each match
 │   │       └── simulate_phase.py      # Testing: simulate match results
 │   ├── models.py                  # Data models
 │   ├── views.py                   # Request handlers
 │   ├── forms.py                   # Registration and prediction forms
 │   ├── admin.py                   # Admin panel configuration
+│   ├── context_processors.py      # Injects web_title into all templates
 │   └── templatetags/
 │       └── bet_extras.py          # Custom template filters
 ├── templates/
@@ -309,15 +354,41 @@ worldcup_sweepstake/
 │       ├── leaderboard.html
 │       ├── my_predictions.html
 │       └── group_standings.html
+├── locale/
+│   └── es/
+│       └── LC_MESSAGES/
+│           ├── django.po          # Spanish translations (source)
+│           └── django.mo          # Compiled translations (generated)
 ├── worldcup_sweepstake/           # Django project config
 │   ├── settings.py
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
+├── valid_emails.csv               # Invite list (email + invite code per user)
+├── teams.csv                      # Sweepstake teams definition (optional)
 ├── .env                           # Local config — gitignored, create manually
 ├── manage.py
 ├── requirements.txt
 └── README.md
+```
+
+---
+
+## Internationalisation
+
+The interface supports English (`en`) and Spanish (`es`), controlled by the `LANGUAGE` variable in `.env`. All user-visible strings in templates, forms, and views are translated.
+
+To add a new language:
+
+1. Create `locale/<lang>/LC_MESSAGES/django.po` (copy `locale/es/django.po` as a template)
+2. Fill in the `msgstr` entries
+3. Compile: `python manage.py compilemessages --locale=<lang>`
+4. Set `LANGUAGE=<lang>` in `.env`
+
+To recompile after editing an existing `.po` file:
+
+```bash
+python manage.py compilemessages --locale=es
 ```
 
 ---

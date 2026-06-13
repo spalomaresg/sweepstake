@@ -37,7 +37,7 @@ def register(request):
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            profile, _ = Profile.objects.get_or_create(user=user)
+            profile, _created = Profile.objects.get_or_create(user=user)
             profile.team = form.selected_team
             profile.save()
             login(request, user)
