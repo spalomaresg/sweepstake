@@ -28,7 +28,7 @@
         {% if forloop.counter <= 2 %}bg-emerald-500/5{% endif %}">
         <td class="px-4 py-3 font-semibold flex items-center gap-2">
           <span class="text-white/30 text-xs w-4">{{ forloop.counter }}</span>
-          {{ row.team }}
+          {{ row.team.flag }} {% trans row.team.name %}
           {% if forloop.counter <= 2 %}
             <span class="text-xs text-emerald-400 ml-auto">↑</span>
           {% endif %}

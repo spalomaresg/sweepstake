@@ -5,83 +5,136 @@
 <div class="max-w-md mx-auto mt-10">
   <div class="glass rounded-2xl p-8">
     <h1 class="font-display text-4xl text-emerald-400 mb-1 text-center">{% trans "REGISTER" %}</h1>
-    <p class="text-center text-white/40 text-sm mb-7">{% trans "You need an invite email and code to register." %}</p>
+
+    {% if stage == 'initial' %}
+    {# ── Step 1: username + invite code ───────────────────────────────────── #}
+    <p class="text-center text-white/40 text-sm mb-7">{% trans "Enter your username and invite code to join a sweepstake." %}</p>
+
+    {% if errors.non_field %}
+    <div class="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-4">
+      <p class="text-red-400 text-sm">{{ errors.non_field }}</p>
+    </div>
+    {% endif %}
+
     <form method="post" class="space-y-4">
       {% csrf_token %}
-      {% for field in form %}
-      {% if field.name != 'team' or sweepstake_teams %}
+      <input type="hidden" name="stage" value="initial">
       <div>
-        <label class="block text-sm text-white/60 mb-1">{{ field.label }}</label>
-        {% if field.name == 'team' %}
-          {# Render team as styled radio cards instead of a plain select #}
-          <div class="grid grid-cols-1 gap-2" id="team-cards">
-            {% for choice_val, choice_label in field.field.choices %}
-              {% if choice_val %}
-              <label class="team-card flex items-center gap-3 px-4 py-3 rounded-lg border border-white/10 cursor-pointer hover:border-white/30 transition has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10">
-                <input type="radio" name="{{ field.html_name }}" value="{{ choice_val }}"
-                  class="sr-only" {% if field.value == choice_val|stringformat:"s" %}checked{% endif %}>
-                <span class="w-3 h-3 rounded-full shrink-0" id="dot-{{ choice_val }}"></span>
-                <span class="text-sm text-white/80">{{ choice_label }}</span>
-              </label>
-              {% endif %}
-            {% endfor %}
-          </div>
-          {# Hidden fallback select for form submission — kept in sync by JS #}
-          <div class="hidden">{{ field }}</div>
-        {% else %}
-          {{ field }}
-          {% if field.name == 'email' %}
-            <p class="text-white/30 text-xs mt-1">{% trans "Must match your invite email exactly." %}</p>
-          {% endif %}
-        {% endif %}
-        {% if field.errors %}<p class="text-red-400 text-xs mt-1">{{ field.errors|join:", " }}</p>{% endif %}
+        <label class="block text-sm text-white/60 mb-1">{% trans "Username" %}</label>
+        <input type="text" name="username" value="{{ username_value|default:'' }}" required autocomplete="username"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800 border {% if errors.username %}border-red-500{% else %}border-white/20{% endif %} text-white placeholder-white/40 focus:outline-none focus:border-emerald-400">
+        {% if errors.username %}<p class="text-red-400 text-xs mt-1">{{ errors.username }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{% trans "Invite Code" %}</label>
+        <input type="text" name="invite_code" value="{{ invite_param|default:'' }}"
+          {% if invite_param %}readonly{% endif %} required autocomplete="off"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800 border {% if errors.invite_code %}border-red-500{% else %}border-white/20{% endif %} text-white placeholder-white/40 focus:outline-none focus:border-emerald-400{% if invite_param %} opacity-60 cursor-not-allowed{% endif %}">
+        {% if errors.invite_code %}<p class="text-red-400 text-xs mt-1">{{ errors.invite_code }}</p>{% endif %}
+      </div>
+      <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">
+        {% trans "Continue" %} →
+      </button>
+    </form>
+
+    {% elif stage == 'login' %}
+    {# ── Step 2a: existing user — just needs a password ───────────────────── #}
+    <p class="text-center text-white/40 text-sm mb-5">
+      {% blocktrans with sweepstake_name=sweepstake.name %}Joining <strong class="text-white/70">{{ sweepstake_name }}</strong>{% endblocktrans %}
+    </p>
+    <div class="bg-white/5 rounded-lg px-4 py-3 mb-4 flex items-center gap-2 text-sm text-white/70">
+      <span>👤</span>
+      <strong class="text-white">{{ username }}</strong>
+      <span class="text-white/40">— {% trans "already registered" %}</span>
+    </div>
+    <p class="text-white/50 text-sm mb-4">{% trans "Enter your password to join this sweepstake." %}</p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="stage" value="login">
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{% trans "Password" %}</label>
+        <input type="password" name="password" required autocomplete="current-password"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800 border {% if errors.password %}border-red-500{% else %}border-white/20{% endif %} text-white placeholder-white/40 focus:outline-none focus:border-emerald-400">
+        {% if errors.password %}<p class="text-red-400 text-xs mt-1">{{ errors.password }}</p>{% endif %}
+      </div>
+      <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">
+        {% trans "Join sweepstake" %}
+      </button>
+    </form>
+    <p class="text-center text-white/30 text-xs mt-4">
+      <a href="{% url 'register' %}" class="hover:text-white/60">{% trans "Not you? Start over" %}</a>
+    </p>
+
+    {% elif stage == 'new' %}
+    {# ── Step 2b: new user — full registration form ───────────────────────── #}
+    <p class="text-center text-white/40 text-sm mb-5">
+      {% blocktrans with sweepstake_name=sweepstake.name %}Joining <strong class="text-white/70">{{ sweepstake_name }}</strong>{% endblocktrans %}
+    </p>
+    <div class="bg-white/5 rounded-lg px-4 py-3 mb-4 flex items-center gap-2 text-sm">
+      <span>👤</span>
+      <strong class="text-white">{{ username }}</strong>
+    </div>
+
+    {% if errors.non_field %}
+    <div class="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-4">
+      <p class="text-red-400 text-sm">{{ errors.non_field }}</p>
+    </div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="stage" value="new">
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{% trans "Name" %}</label>
+        <input type="text" name="name" value="{{ name_value|default:'' }}" required autocomplete="name"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800 border {% if errors.name %}border-red-500{% else %}border-white/20{% endif %} text-white placeholder-white/40 focus:outline-none focus:border-emerald-400"
+          placeholder="{% trans "First Last" %}">
+        {% if errors.name %}<p class="text-red-400 text-xs mt-1">{{ errors.name }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{% trans "Password" %}</label>
+        <input type="password" name="password1" required autocomplete="new-password"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800 border {% if errors.password1 %}border-red-500{% else %}border-white/20{% endif %} text-white placeholder-white/40 focus:outline-none focus:border-emerald-400">
+        {% if errors.password1 %}<p class="text-red-400 text-xs mt-1">{{ errors.password1 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-white/60 mb-1">{% trans "Repeat Password" %}</label>
+        <input type="password" name="password2" required autocomplete="new-password"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800 border {% if errors.password2 %}border-red-500{% else %}border-white/20{% endif %} text-white placeholder-white/40 focus:outline-none focus:border-emerald-400">
+        {% if errors.password2 %}<p class="text-red-400 text-xs mt-1">{{ errors.password2 }}</p>{% endif %}
+      </div>
+
+      {% if sweepstake_teams %}
+      <div>
+        <label class="block text-sm text-white/60 mb-2">
+          {% trans "Your Team" %} <span class="text-white/30">({% trans "optional" %})</span>
+        </label>
+        <div class="grid grid-cols-1 gap-2" id="team-cards">
+          {% for team in sweepstake_teams %}
+          <label class="team-card flex items-center gap-3 px-4 py-3 rounded-lg border border-white/10 cursor-pointer hover:border-white/30 transition has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10">
+            <input type="radio" name="team" value="{{ team.id }}" class="sr-only">
+            <span class="w-3 h-3 rounded-full shrink-0" style="background:{{ team.color }}"></span>
+            <span class="text-sm text-white/80">{{ team.name }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% if errors.team %}<p class="text-red-400 text-xs mt-1">{{ errors.team }}</p>{% endif %}
       </div>
       {% endif %}
-      {% endfor %}
+
       <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition mt-2">
         {% trans "Create account" %}
       </button>
     </form>
-    <p class="text-center text-white/40 text-sm mt-5">{% trans "Already have an account?" %}
-      <a href="{% url 'login' %}" class="text-emerald-400 hover:underline">{% trans "Sign in" %}</a></p>
+    <p class="text-center text-white/30 text-xs mt-4">
+      <a href="{% url 'register' %}" class="hover:text-white/60">{% trans "Start over" %}</a>
+    </p>
+
+    {% endif %}
+
+    <p class="text-center text-white/40 text-sm mt-6">{% trans "Already have an account?" %}
+      <a href="{% url 'login' %}" class="text-emerald-400 hover:underline">{% trans "Sign in" %}</a>
+    </p>
   </div>
 </div>
-
-<script>
-// Team colours indexed by PK — injected from Django choices
-const teamColors = {};
-document.querySelectorAll('#team-cards .team-card').forEach(card => {
-  const radio = card.querySelector('input[type=radio]');
-  // We'll fetch the colour via a data attribute set below
-});
-</script>
-
-{# Inject team colours via a small inline script #}
-<script>
-const TEAM_COLORS = {
-  {% for bt in sweepstake_teams %}
-  "{{ bt.id }}": "{{ bt.color }}"{% if not forloop.last %},{% endif %}
-  {% endfor %}
-};
-document.querySelectorAll('#team-cards .team-card').forEach(card => {
-  const radio = card.querySelector('input[type=radio]');
-  const dot   = card.querySelector('span.rounded-full');
-  const color = TEAM_COLORS[radio.value];
-  if (color && dot) dot.style.background = color;
-});
-
-// Keep hidden select in sync with radio cards
-document.querySelectorAll('#team-cards input[type=radio]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const sel = document.querySelector('select[name="{{ form.team.html_name }}"]');
-    if (sel) sel.value = radio.value;
-  });
-});
-// Init hidden select to already-checked radio (e.g. on validation error)
-const checked = document.querySelector('#team-cards input[type=radio]:checked');
-if (checked) {
-  const sel = document.querySelector('select[name="{{ form.team.html_name }}"]');
-  if (sel) sel.value = checked.value;
-}
-</script>
 {% endblock %}

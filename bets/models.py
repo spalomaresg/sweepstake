@@ -3,15 +3,33 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 
 
+class Sweepstake(models.Model):
+    name = models.CharField(max_length=100)
+    invite_code = models.CharField(max_length=50, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Sweepstake"
+        verbose_name_plural = "Sweepstakes"
+        ordering = ['name']
+
+
 class SweepstakeTeam(models.Model):
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default='#3B82F6')
+    sweepstake = models.ForeignKey(
+        Sweepstake, on_delete=models.CASCADE, related_name='teams',
+        null=True, blank=True,
+    )
 
     def __str__(self):
         return self.name
 
     def _active_members(self):
-        """Members counted in team stats (not excluded)."""
+        """SweepstakeMembership rows counted in team stats (not excluded)."""
         return self.members.filter(excluded_from_team_stats=False)
 
     @property
@@ -25,7 +43,10 @@ class SweepstakeTeam(models.Model):
 
     @property
     def total_points(self):
-        return sum(m.user.bets.aggregate(t=models.Sum('points_earned'))['t'] or 0 for m in self._active_members())
+        return sum(
+            m.user.bets.aggregate(t=models.Sum('points_earned'))['t'] or 0
+            for m in self._active_members()
+        )
 
     def points_by_phase(self):
         members = self._active_members()
@@ -47,11 +68,12 @@ class SweepstakeTeam(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    team = models.ForeignKey(SweepstakeTeam, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
-    excluded_from_team_stats = models.BooleanField(
-        default=False,
-        help_text="Exclude this user's points from their team's leaderboard stats."
+    # Legacy fields — team assignment now lives in SweepstakeMembership
+    team = models.ForeignKey(
+        SweepstakeTeam, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='legacy_members',
     )
+    excluded_from_team_stats = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Profile of {self.user.username}"
@@ -71,6 +93,26 @@ class Profile(models.Model):
     class Meta:
         verbose_name = "Profile"
         verbose_name_plural = "Profiles"
+
+
+class SweepstakeMembership(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memberships')
+    sweepstake = models.ForeignKey(Sweepstake, on_delete=models.CASCADE, related_name='memberships')
+    team = models.ForeignKey(
+        SweepstakeTeam, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='members',
+    )
+    excluded_from_team_stats = models.BooleanField(default=False)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} — {self.sweepstake.name}"
+
+    class Meta:
+        unique_together = ('user', 'sweepstake')
+        verbose_name = "Sweepstake Membership"
+        verbose_name_plural = "Sweepstake Memberships"
+        ordering = ['sweepstake__name', 'user__username']
 
 
 class NationalTeam(models.Model):
@@ -133,7 +175,6 @@ def get_bettable_phases():
         phase_matches = Match.objects.filter(phase=phase_key)
 
         if not phase_matches.exists():
-            # Next phase — no matches created yet but it's open for bets
             bettable.add(phase_key)
             if phase_key == 'third_place':
                 bettable.add('final')
@@ -144,16 +185,13 @@ def get_bettable_phases():
         unfinished = phase_matches.filter(finished=False).exists()
 
         if unfinished:
-            # Active phase with ongoing matches
             bettable.add(phase_key)
             break
         else:
-            # Phase fully complete
             if phase_key == 'semifinals':
                 bettable.add('third_place')
                 bettable.add('final')
                 break
-            # Otherwise continue to next phase
 
     return bettable
 
@@ -178,10 +216,8 @@ def auto_create_next_phase_matches():
         all_done = not phase_matches.filter(finished=False).exists()
         if not all_done:
             break
-        # This phase is done — ensure next phase matches exist
         next_phase = PHASE_ORDER[i + 1]
         if phase_key == 'semifinals':
-            # Create both third_place and final
             if not Match.objects.filter(phase='third_place').exists():
                 cmd._create_third_place()
             if not Match.objects.filter(phase='final').exists():
@@ -258,8 +294,6 @@ class Match(models.Model):
     kickoff = models.DateTimeField()
     home_goals = models.IntegerField(null=True, blank=True)
     away_goals = models.IntegerField(null=True, blank=True)
-    # For knockout: separate field for who actually advances (after extra time/pens)
-    # None means match not finished; 'home' or 'away'
     knockout_winner = models.CharField(max_length=4, null=True, blank=True,
         help_text="Knockout only: who advanced (home/away) after extra time/pens")
     finished = models.BooleanField(default=False)
@@ -303,10 +337,8 @@ class Match(models.Model):
             return 0
         pts_winner, pts_exact = POINTS_BY_PHASE[self.phase]
         points = 0
-        # Check winner
         if bet.predicted_winner == self.winner:
             points += pts_winner
-        # Check exact score (cumulative — adds on top of winner points)
         if pts_exact and self.home_goals is not None and (
                 bet.predicted_home_goals == self.home_goals and
                 bet.predicted_away_goals == self.away_goals):

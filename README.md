@@ -435,12 +435,13 @@ server {
 
 ### Automatic result syncing (systemd service)
 
-Create `/etc/systemd/system/wc-sync.service`:
+Create `/etc/systemd/system/django-sweepstake-sync.service`, replacing `django-sweepstake` with your main service name:
 
 ```ini
 [Unit]
 Description=World Cup result sync scheduler
 After=network.target
+BindsTo=django-sweepstake.service
 
 [Service]
 Type=simple
@@ -455,18 +456,22 @@ StandardError=journal
 WantedBy=multi-user.target
 ```
 
+`BindsTo=django-sweepstake.service` ties the sync scheduler to your main Django service — it starts and stops automatically alongside it.
+
 Enable and start it:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now wc-sync.service
+sudo systemctl enable --now django-sweepstake-sync.service
 
-# Check status
-sudo systemctl status wc-sync.service
+# Verify both are running
+sudo systemctl status django-sweepstake django-sweepstake-sync
 
-# Watch logs live
-sudo journalctl -u wc-sync.service -f
+# Watch sync logs live
+sudo journalctl -u django-sweepstake-sync.service -f
 ```
+
+From then on, `systemctl start django-sweepstake` brings up both services, and `systemctl stop django-sweepstake` stops both.
 
 The scheduler only starts when `DEBUG=False`. It sleeps until the next scheduled sync time and wakes up automatically — no polling overhead between matches.
 

@@ -4,118 +4,180 @@
 {% block content %}
 <h1 class="font-display text-5xl text-emerald-400 mb-6">{% trans "LEADERBOARD" %}</h1>
 
-<!-- Player / Teams tabs -->
-<div class="flex gap-2 mb-6">
-  <button onclick="showTab('individual')" id="tab-individual"
-    class="px-5 py-2 rounded-lg font-semibold transition bg-emerald-500 text-white text-sm">👤 {% trans "Individual" %}</button>
-  {% if show_teams_tab %}
-  <button onclick="showTab('teams')" id="tab-teams"
-    class="px-5 py-2 rounded-lg font-semibold transition glass text-white/60 hover:text-white text-sm">🏆 {% trans "Teams" %}</button>
-  {% endif %}
+{% if not sweepstake_data %}
+{# ── No sweepstake yet ─────────────────────────────────────────────────────── #}
+<div class="glass rounded-2xl p-10 text-center">
+  <p class="text-white/50 text-lg mb-4">{% trans "You haven't joined any sweepstake yet." %}</p>
+  <a href="{% url 'register' %}" class="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition">
+    {% trans "Register with an invite code" %} →
+  </a>
 </div>
 
-<!-- INDIVIDUAL -->
-<div id="panel-individual">
-  <div class="glass rounded-2xl overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
-          <th class="px-2 py-2 text-left sticky left-0 z-20 bg-[#0d1117] w-10 min-w-[2.5rem]">#</th>
-          <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] border-r border-white/10">{% trans "Player" %}</th>
-          <th class="px-3 py-2 text-left hidden md:table-cell">{% trans "Team" %}</th>
-          {% for phase_key, phase_label in active_phases %}
-          <th class="px-2 py-2 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
-          {% endfor %}
-          <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">{% trans "Total" %}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in individual_ranking %}
-        <tr class="border-b border-white/5 hover:bg-white/5 transition {% if row.profile.user == request.user %}bg-emerald-500/10{% endif %}">
-          <td class="px-2 py-2 font-display text-base w-10 min-w-[2.5rem] sticky left-0 z-10 bg-[#0d1117]
-            {% if forloop.counter == 1 %}text-yellow-400{% elif forloop.counter == 2 %}text-gray-300{% elif forloop.counter == 3 %}text-amber-600{% else %}text-white/30{% endif %}">
-            {{ forloop.counter }}
-          </td>
-          <td class="px-3 py-2 sticky left-10 z-10 bg-[#0d1117] border-r border-white/10">
-            <div class="font-semibold truncate max-w-[100px] md:max-w-none">{{ row.profile.user.username }}{% if row.profile.user == request.user %}<span class="ml-1 text-xs text-emerald-400">({% trans "you" %})</span>{% endif %}</div>
-          </td>
-          <td class="px-3 py-2 hidden md:table-cell">
-            {% if row.profile.team %}
-              <span class="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
-                style="background:{{ row.profile.team.color }}22;color:{{ row.profile.team.color }};border:1px solid {{ row.profile.team.color }}44">
-                {{ row.profile.team.name }}
-              </span>
-            {% else %}<span class="text-white/20">—</span>{% endif %}
-          </td>
-          {% for phase_key, _ in active_phases %}
-          {% with pts=row.phase_points|getitem:phase_key %}
-          <td class="px-2 py-2 text-right {% if pts > 0 %}text-white/70{% else %}text-white/20{% endif %}">{{ pts }}</td>
-          {% endwith %}
-          {% endfor %}
-          <td class="px-3 py-2 text-right font-display text-lg text-emerald-400 sticky right-0 z-10 bg-[#0d1117] border-l border-white/10">{{ row.total }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">{% trans "No predictions yet." %}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+{% else %}
 
-<!-- TEAMS -->
-{% if show_teams_tab %}
-<div id="panel-teams" class="hidden">
-  <div class="glass rounded-2xl overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
-          <th class="px-2 py-2 text-left sticky left-0 z-20 bg-[#0d1117] w-10 min-w-[2.5rem]">#</th>
-          <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] w-36 min-w-[9rem]">{% trans "Team" %}</th>
-          <th class="px-3 py-2 text-right sticky left-[11.5rem] z-20 bg-[#0d1117] border-r border-white/10 hidden md:table-cell">{% trans "Members" %}</th>
-          {% for phase_key, phase_label in active_phases %}
-          <th class="px-2 py-2 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
-          {% endfor %}
-          <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">{% trans "Avg Total" %}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in team_ranking %}
-        <tr class="border-b border-white/5 hover:bg-white/5 transition">
-          <td class="px-2 py-2 font-display text-base w-10 min-w-[2.5rem] sticky left-0 z-10 bg-[#0d1117]
-            {% if forloop.counter == 1 %}text-yellow-400{% elif forloop.counter == 2 %}text-gray-300{% elif forloop.counter == 3 %}text-amber-600{% else %}text-white/30{% endif %}">
-            {{ forloop.counter }}
-          </td>
-          <td class="px-3 py-2 sticky left-10 z-10 bg-[#0d1117] w-36 min-w-[9rem]">
-            <span class="px-2 py-1 rounded-full text-sm font-semibold truncate block max-w-[100px] md:max-w-none"
-              style="background:{{ row.team.color }}22;color:{{ row.team.color }};border:1px solid {{ row.team.color }}44">
-              {{ row.team.name }}
-            </span>
-          </td>
-          <td class="px-3 py-2 text-right text-white/40 sticky left-[11.5rem] z-10 bg-[#0d1117] border-r border-white/10 hidden md:table-cell">{{ row.members }}</td>
-          {% for phase_key, _ in active_phases %}
-          {% with pts=row.phase_points|getitem:phase_key %}
-          <td class="px-2 py-2 text-right {% if pts > 0 %}text-white/70{% else %}text-white/20{% endif %}">{{ pts }}</td>
-          {% endwith %}
-          {% endfor %}
-          <td class="px-3 py-2 text-right font-display text-lg text-emerald-400 sticky right-0 z-10 bg-[#0d1117] border-l border-white/10">{{ row.average }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">{% trans "No betting teams yet." %}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <p class="text-xs text-white/30 mt-3 text-right">{% trans "Phase columns show average pts per active member. Avg Total = overall average." %}</p>
+{# ── Sweepstake outer tabs (only when user belongs to more than one) ────────── #}
+{% if show_sweepstake_tabs %}
+<div class="flex flex-wrap gap-2 mb-4">
+  {% for data in sweepstake_data %}
+  <button onclick="showSweepstake({{ data.sweepstake.id }})" id="sp-tab-{{ data.sweepstake.id }}"
+    class="px-5 py-2 rounded-lg font-semibold transition text-sm {% if forloop.first %}bg-emerald-500 text-white{% else %}glass text-white/60 hover:text-white{% endif %}">
+    🏟 {{ data.sweepstake.name }}
+  </button>
+  {% endfor %}
 </div>
 {% endif %}
 
+{# ── One panel per sweepstake ─────────────────────────────────────────────── #}
+{% for data in sweepstake_data %}
+<div id="sp-{{ data.sweepstake.id }}" {% if show_sweepstake_tabs and not forloop.first %}class="hidden"{% endif %}>
+
+  {% if show_sweepstake_tabs %}
+  <p class="text-white/30 text-xs mb-4 uppercase tracking-wider">{{ data.sweepstake.name }}</p>
+  {% endif %}
+
+  {# Individual / Teams sub-tabs #}
+  <div class="flex gap-2 mb-6">
+    <button onclick="showTab({{ data.sweepstake.id }}, 'individual')" id="tab-{{ data.sweepstake.id }}-individual"
+      class="px-5 py-2 rounded-lg font-semibold transition bg-emerald-500 text-white text-sm">
+      👤 {% trans "Individual" %}
+    </button>
+    {% if data.show_teams_tab %}
+    <button onclick="showTab({{ data.sweepstake.id }}, 'teams')" id="tab-{{ data.sweepstake.id }}-teams"
+      class="px-5 py-2 rounded-lg font-semibold transition glass text-white/60 hover:text-white text-sm">
+      🏆 {% trans "Teams" %}
+    </button>
+    {% endif %}
+  </div>
+
+  {# ── INDIVIDUAL table ──────────────────────────────────────────────────── #}
+  <div id="panel-{{ data.sweepstake.id }}-individual">
+    <div class="glass rounded-2xl overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
+            <th class="px-2 py-2 text-left sticky left-0 z-20 bg-[#0d1117] w-10 min-w-[2.5rem]">#</th>
+            <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] border-r border-white/10">{% trans "Player" %}</th>
+            {% if data.has_sweepstake_teams %}<th class="px-3 py-2 text-left hidden md:table-cell">{% trans "Team" %}</th>{% endif %}
+            {% for phase_key, phase_label in active_phases %}
+            <th class="px-2 py-2 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
+            {% endfor %}
+            <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">{% trans "Total" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data.individual_ranking %}
+          <tr class="border-b border-white/5 hover:bg-white/5 transition {% if row.membership.user == request.user %}bg-emerald-500/10{% endif %}">
+            <td class="px-2 py-2 font-display text-base w-10 min-w-[2.5rem] sticky left-0 z-10 bg-[#0d1117]
+              {% if forloop.counter == 1 %}text-yellow-400{% elif forloop.counter == 2 %}text-gray-300{% elif forloop.counter == 3 %}text-amber-600{% else %}text-white/30{% endif %}">
+              {{ forloop.counter }}
+            </td>
+            <td class="px-3 py-2 sticky left-10 z-10 bg-[#0d1117] border-r border-white/10">
+              <div class="font-semibold truncate max-w-[100px] md:max-w-none">
+                {{ row.membership.user.username }}{% if row.membership.user == request.user %}<span class="ml-1 text-xs text-emerald-400">({% trans "you" %})</span>{% endif %}
+              </div>
+            </td>
+            {% if data.has_sweepstake_teams %}
+            <td class="px-3 py-2 hidden md:table-cell">
+              {% if row.membership.team %}
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                  style="background:{{ row.membership.team.color }}22;color:{{ row.membership.team.color }};border:1px solid {{ row.membership.team.color }}44">
+                  {{ row.membership.team.name }}
+                </span>
+              {% else %}<span class="text-white/20">—</span>{% endif %}
+            </td>
+            {% endif %}
+            {% for phase_key, phase_lbl in active_phases %}
+            {% with pts=row.phase_points|getitem:phase_key %}
+            <td class="px-2 py-2 text-right {% if pts > 0 %}text-white/70{% else %}text-white/20{% endif %}">{{ pts }}</td>
+            {% endwith %}
+            {% endfor %}
+            <td class="px-3 py-2 text-right font-display text-lg text-emerald-400 sticky right-0 z-10 bg-[#0d1117] border-l border-white/10">{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">{% trans "No predictions yet." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ── TEAMS table ───────────────────────────────────────────────────────── #}
+  {% if data.show_teams_tab %}
+  <div id="panel-{{ data.sweepstake.id }}-teams" class="hidden">
+    <div class="glass rounded-2xl overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-wider">
+            <th class="px-2 py-2 text-left sticky left-0 z-20 bg-[#0d1117] w-10 min-w-[2.5rem]">#</th>
+            <th class="px-3 py-2 text-left sticky left-10 z-20 bg-[#0d1117] w-36 min-w-[9rem]">{% trans "Team" %}</th>
+            <th class="px-3 py-2 text-right sticky left-[11.5rem] z-20 bg-[#0d1117] border-r border-white/10 hidden md:table-cell">{% trans "Members" %}</th>
+            {% for phase_key, phase_label in active_phases %}
+            <th class="px-2 py-2 text-right whitespace-nowrap text-white/30">{{ phase_label }}</th>
+            {% endfor %}
+            <th class="px-3 py-2 text-right text-white/60 font-bold sticky right-0 z-20 bg-[#0d1117] border-l border-white/10">{% trans "Avg Total" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data.team_ranking %}
+          <tr class="border-b border-white/5 hover:bg-white/5 transition">
+            <td class="px-2 py-2 font-display text-base w-10 min-w-[2.5rem] sticky left-0 z-10 bg-[#0d1117]
+              {% if forloop.counter == 1 %}text-yellow-400{% elif forloop.counter == 2 %}text-gray-300{% elif forloop.counter == 3 %}text-amber-600{% else %}text-white/30{% endif %}">
+              {{ forloop.counter }}
+            </td>
+            <td class="px-3 py-2 sticky left-10 z-10 bg-[#0d1117] w-36 min-w-[9rem]">
+              <span class="px-2 py-1 rounded-full text-sm font-semibold truncate block max-w-[100px] md:max-w-none"
+                style="background:{{ row.team.color }}22;color:{{ row.team.color }};border:1px solid {{ row.team.color }}44">
+                {{ row.team.name }}
+              </span>
+            </td>
+            <td class="px-3 py-2 text-right text-white/40 sticky left-[11.5rem] z-10 bg-[#0d1117] border-r border-white/10 hidden md:table-cell">{{ row.members }}</td>
+            {% for phase_key, phase_lbl in active_phases %}
+            {% with pts=row.phase_points|getitem:phase_key %}
+            <td class="px-2 py-2 text-right {% if pts > 0 %}text-white/70{% else %}text-white/20{% endif %}">{{ pts }}</td>
+            {% endwith %}
+            {% endfor %}
+            <td class="px-3 py-2 text-right font-display text-lg text-emerald-400 sticky right-0 z-10 bg-[#0d1117] border-l border-white/10">{{ row.average }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="99" class="px-4 py-12 text-center text-white/30">{% trans "No betting teams yet." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-white/30 mt-3 text-right">{% trans "Phase columns show average pts per active member. Avg Total = overall average." %}</p>
+  </div>
+  {% endif %}
+
+</div>{% comment %}end sp-{{ data.sweepstake.id }}{% endcomment %}
+{% endfor %}
+
+{% endif %}
+
 <script>
-const TABS = ['individual'{% if show_teams_tab %},'teams'{% endif %}];
-function showTab(tab) {
-  TABS.forEach(t => {
-    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
-    document.getElementById('tab-' + t).className =
-      'px-5 py-2 rounded-lg font-semibold transition text-sm ' +
+const SWEEPSTAKES = [
+  {% for data in sweepstake_data %}
+  { id: {{ data.sweepstake.id }}, tabs: ['individual'{% if data.show_teams_tab %},'teams'{% endif %}] }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+
+function showSweepstake(spId) {
+  SWEEPSTAKES.forEach(sp => {
+    const panel = document.getElementById('sp-' + sp.id);
+    const tab   = document.getElementById('sp-tab-' + sp.id);
+    if (panel) panel.classList.toggle('hidden', sp.id !== spId);
+    if (tab)   tab.className = 'px-5 py-2 rounded-lg font-semibold transition text-sm ' +
+      (sp.id === spId ? 'bg-emerald-500 text-white' : 'glass text-white/60 hover:text-white');
+  });
+}
+
+function showTab(spId, tab) {
+  const sp = SWEEPSTAKES.find(s => s.id === spId);
+  if (!sp) return;
+  sp.tabs.forEach(t => {
+    const panel = document.getElementById('panel-' + spId + '-' + t);
+    const tabEl = document.getElementById('tab-' + spId + '-' + t);
+    if (panel) panel.classList.toggle('hidden', t !== tab);
+    if (tabEl) tabEl.className = 'px-5 py-2 rounded-lg font-semibold transition text-sm ' +
       (t === tab ? 'bg-emerald-500 text-white' : 'glass text-white/60 hover:text-white');
   });
 }

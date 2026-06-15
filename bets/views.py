@@ -1,11 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.db.models import Sum
@@ -15,9 +14,10 @@ from django.contrib.auth.models import User
 import json
 
 from .models import (Match, Bet, SweepstakeTeam, Profile, NationalTeam,
+                     Sweepstake, SweepstakeMembership,
                      PHASE_CHOICES, PHASE_ORDER, POINTS_BY_PHASE,
                      get_bettable_phases, get_group_standings)
-from .forms import BetForm, RegistrationForm
+from .forms import BetForm
 
 
 @receiver(post_save, sender=User)
@@ -32,24 +32,170 @@ def home(request):
     return render(request, 'bets/home.html')
 
 
+def _clear_reg_session(request):
+    for key in ['reg_username', 'reg_sweepstake_id']:
+        request.session.pop(key, None)
+
+
 def register(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            profile, _created = Profile.objects.get_or_create(user=user)
-            profile.team = form.selected_team
-            profile.save()
-            login(request, user)
-            messages.success(request, _('Welcome, %(username)s!') % {'username': user.username})
-            return redirect('leaderboard')
-    else:
-        form = RegistrationForm()
-    from .models import SweepstakeTeam as BT
-    return render(request, 'bets/register.html', {
-        'form': form,
-        'sweepstake_teams': BT.objects.all().order_by('name'),
-    })
+    invite_param = request.GET.get('invite', '').strip()
+
+    if request.method == 'GET':
+        _clear_reg_session(request)
+        return render(request, 'bets/register.html', {
+            'stage': 'initial',
+            'invite_param': invite_param,
+        })
+
+    stage = request.POST.get('stage', 'initial')
+
+    # ── Stage 1: validate username + invite code ──────────────────────────────
+    if stage == 'initial':
+        username = request.POST.get('username', '').strip()
+        invite_code = request.POST.get('invite_code', '').strip()
+        errors = {}
+
+        if not username:
+            errors['username'] = _('Username is required.')
+
+        sweepstake = None
+        if not invite_code:
+            errors['invite_code'] = _('Invite code is required.')
+        else:
+            try:
+                sweepstake = Sweepstake.objects.get(invite_code__iexact=invite_code)
+            except Sweepstake.DoesNotExist:
+                errors['invite_code'] = _('Invalid invite code.')
+
+        if errors:
+            return render(request, 'bets/register.html', {
+                'stage': 'initial',
+                'invite_param': invite_code,
+                'errors': errors,
+                'username_value': username,
+            })
+
+        user_exists = User.objects.filter(username__iexact=username).exists()
+
+        if user_exists:
+            existing_user = User.objects.get(username__iexact=username)
+            if SweepstakeMembership.objects.filter(user=existing_user, sweepstake=sweepstake).exists():
+                errors['invite_code'] = _('You are already a member of this sweepstake.')
+                return render(request, 'bets/register.html', {
+                    'stage': 'initial',
+                    'invite_param': invite_code,
+                    'errors': errors,
+                    'username_value': username,
+                })
+
+        request.session['reg_username'] = username
+        request.session['reg_sweepstake_id'] = sweepstake.id
+
+        if user_exists:
+            return render(request, 'bets/register.html', {
+                'stage': 'login',
+                'username': username,
+                'sweepstake': sweepstake,
+            })
+        else:
+            teams = SweepstakeTeam.objects.filter(sweepstake=sweepstake).order_by('name')
+            return render(request, 'bets/register.html', {
+                'stage': 'new',
+                'username': username,
+                'sweepstake': sweepstake,
+                'sweepstake_teams': teams,
+            })
+
+    # ── Stage 2a: existing user — password check ──────────────────────────────
+    elif stage == 'login':
+        username = request.session.get('reg_username')
+        sweepstake_id = request.session.get('reg_sweepstake_id')
+        if not username or not sweepstake_id:
+            return redirect('register')
+
+        sweepstake = get_object_or_404(Sweepstake, id=sweepstake_id)
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+
+        if not user:
+            return render(request, 'bets/register.html', {
+                'stage': 'login',
+                'username': username,
+                'sweepstake': sweepstake,
+                'errors': {'password': _('Incorrect password.')},
+            })
+
+        SweepstakeMembership.objects.get_or_create(user=user, sweepstake=sweepstake)
+        login(request, user)
+        _clear_reg_session(request)
+        messages.success(
+            request,
+            _('Welcome back! You have joined %(sweepstake)s.') % {'sweepstake': sweepstake.name}
+        )
+        return redirect('leaderboard')
+
+    # ── Stage 2b: new user — full registration ────────────────────────────────
+    elif stage == 'new':
+        username = request.session.get('reg_username')
+        sweepstake_id = request.session.get('reg_sweepstake_id')
+        if not username or not sweepstake_id:
+            return redirect('register')
+
+        sweepstake = get_object_or_404(Sweepstake, id=sweepstake_id)
+        teams = SweepstakeTeam.objects.filter(sweepstake=sweepstake).order_by('name')
+
+        name = request.POST.get('name', '').strip()
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+        team_id = request.POST.get('team', '').strip()
+        errors = {}
+
+        if not name:
+            errors['name'] = _('Name is required.')
+
+        if not password1:
+            errors['password1'] = _('Password is required.')
+        elif len(password1) < 8:
+            errors['password1'] = _('Password must be at least 8 characters.')
+        elif password1 != password2:
+            errors['password2'] = _('Passwords do not match.')
+
+        if User.objects.filter(username__iexact=username).exists():
+            errors['non_field'] = _('This username was just taken. Please start over.')
+
+        team = None
+        if team_id:
+            try:
+                team = SweepstakeTeam.objects.get(id=team_id, sweepstake=sweepstake)
+            except SweepstakeTeam.DoesNotExist:
+                errors['team'] = _('Invalid team selection.')
+
+        if errors:
+            return render(request, 'bets/register.html', {
+                'stage': 'new',
+                'username': username,
+                'sweepstake': sweepstake,
+                'sweepstake_teams': teams,
+                'errors': errors,
+                'name_value': name,
+            })
+
+        user = User.objects.create_user(username=username, password=password1)
+        if name:
+            parts = name.split(' ', 1)
+            user.first_name = parts[0]
+            if len(parts) > 1:
+                user.last_name = parts[1]
+            user.save()
+
+        Profile.objects.get_or_create(user=user)
+        SweepstakeMembership.objects.create(user=user, sweepstake=sweepstake, team=team)
+        login(request, user)
+        _clear_reg_session(request)
+        messages.success(request, _('Welcome, %(username)s!') % {'username': user.username})
+        return redirect('leaderboard')
+
+    return redirect('register')
 
 
 def login_view(request):
@@ -57,12 +203,8 @@ def login_view(request):
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            from .forms import load_valid_emails
-            if not user.is_staff and user.email.lower() not in load_valid_emails():
-                messages.error(request, _('Your email is not on the invite list.'))
-            else:
-                login(request, user)
-                return redirect('leaderboard')
+            login(request, user)
+            return redirect('leaderboard')
         else:
             messages.error(request, _('Incorrect username or password.'))
     else:
@@ -88,20 +230,6 @@ def _points_by_phase_for_user(user):
     }
 
 
-def _points_by_phase_for_team(sweepstake_team):
-    member_count = sweepstake_team.members.count()
-    if not member_count:
-        return {phase_key: 0 for phase_key, _ in PHASE_CHOICES}
-    result = {}
-    for phase_key, _ in PHASE_CHOICES:
-        total = sum(
-            m.user.bets.filter(match__phase=phase_key).aggregate(t=Sum('points_earned'))['t'] or 0
-            for m in sweepstake_team.members.all()
-        )
-        result[phase_key] = round(total / member_count, 2)
-    return result
-
-
 @login_required
 def leaderboard(request):
     active_phases = list(
@@ -110,43 +238,59 @@ def leaderboard(request):
     )
     ordered_phases = [(k, label) for k, label in PHASE_CHOICES if k in active_phases]
 
-    profiles = Profile.objects.select_related('user', 'team').filter(user__is_staff=False)
-    individual_ranking = []
-    for profile in profiles:
-        phase_pts = _points_by_phase_for_user(profile.user)
-        total = sum(phase_pts.values())
-        correct = profile.user.bets.filter(points_earned__gt=0).count()
-        placed = profile.user.bets.count()
-        individual_ranking.append({
-            'profile': profile, 'total': total,
-            'correct': correct, 'placed': placed, 'phase_points': phase_pts,
-        })
-    individual_ranking.sort(key=lambda x: x['total'], reverse=True)
+    user_sweepstake_ids = SweepstakeMembership.objects.filter(
+        user=request.user
+    ).values_list('sweepstake_id', flat=True)
+    user_sweepstakes = list(Sweepstake.objects.filter(id__in=user_sweepstake_ids).order_by('name'))
 
-    teams = SweepstakeTeam.objects.all()
-    team_ranking = []
-    for t in teams:
-        # Use model method which respects excluded_from_team_stats
-        phase_pts = t.points_by_phase()
-        avg_total = t.average_points
-        team_ranking.append({
-            'team': t,
-            'average': avg_total,
-            'total': t.total_points,
-            'members': t._active_members().count(),
-            'phase_points': phase_pts,
-        })
-    team_ranking.sort(key=lambda x: x['average'], reverse=True)
+    sweepstake_data = []
+    for sweepstake in user_sweepstakes:
+        memberships = (
+            SweepstakeMembership.objects
+            .filter(sweepstake=sweepstake)
+            .select_related('user', 'team')
+            .exclude(user__is_staff=True)
+        )
 
-    show_teams_tab = Profile.objects.filter(
-        team__isnull=False, user__is_staff=False
-    ).exists()
+        individual_ranking = []
+        for membership in memberships:
+            phase_pts = _points_by_phase_for_user(membership.user)
+            total = sum(phase_pts.values())
+            individual_ranking.append({
+                'membership': membership,
+                'total': total,
+                'phase_points': phase_pts,
+            })
+        individual_ranking.sort(key=lambda x: x['total'], reverse=True)
+
+        teams = SweepstakeTeam.objects.filter(sweepstake=sweepstake)
+        team_ranking = []
+        for t in teams:
+            phase_pts = t.points_by_phase()
+            team_ranking.append({
+                'team': t,
+                'average': t.average_points,
+                'total': t.total_points,
+                'members': t._active_members().count(),
+                'phase_points': phase_pts,
+            })
+        team_ranking.sort(key=lambda x: x['average'], reverse=True)
+
+        has_sweepstake_teams = teams.exists()
+        show_teams_tab = has_sweepstake_teams and memberships.filter(team__isnull=False).exists()
+
+        sweepstake_data.append({
+            'sweepstake': sweepstake,
+            'individual_ranking': individual_ranking,
+            'team_ranking': team_ranking,
+            'has_sweepstake_teams': has_sweepstake_teams,
+            'show_teams_tab': show_teams_tab,
+        })
 
     return render(request, 'bets/leaderboard.html', {
-        'individual_ranking': individual_ranking,
-        'team_ranking': team_ranking,
+        'sweepstake_data': sweepstake_data,
         'active_phases': ordered_phases,
-        'show_teams_tab': show_teams_tab,
+        'show_sweepstake_tabs': len(user_sweepstakes) > 1,
     })
 
 
@@ -155,11 +299,7 @@ def my_predictions(request):
     now = timezone.now()
     bettable = get_bettable_phases()
 
-    # Determine which phases to show:
-    # - All phases that have matches, PLUS
-    # - The next bettable phase even if it has no matches yet (shows "coming soon")
     phases_data = []
-    shown_phases = set()
 
     for phase_key, phase_label in PHASE_CHOICES:
         all_matches = Match.objects.filter(phase=phase_key).select_related(
@@ -167,7 +307,6 @@ def my_predictions(request):
         has_matches = all_matches.exists()
         is_bettable = phase_key in bettable
 
-        # Skip phases that have no matches AND are not bettable yet
         if not has_matches and not is_bettable:
             continue
 
@@ -200,11 +339,8 @@ def my_predictions(request):
             'is_bettable': is_bettable,
             'is_complete': all_finished,
         })
-        shown_phases.add(phase_key)
 
     total_points = request.user.bets.aggregate(t=Sum('points_earned'))['t'] or 0
-
-    # Default to the last visible phase (most recent/active round)
     active_phase_key = phases_data[-1]['key'] if phases_data else None
 
     return render(request, 'bets/my_predictions.html', {
@@ -248,8 +384,6 @@ def save_prediction_ajax(request, match_id):
             predicted_away_goals = int(predicted_away_goals)
         except (TypeError, ValueError):
             return JsonResponse({'ok': False, 'error': _('Goals must be numbers.')}, status=400)
-        # Knockout phases: no draws allowed — winner must be home or away
-        # (equal score means it goes to penalties; winner reflects who advances)
         if predicted_home_goals > predicted_away_goals and predicted_winner != 'home':
             return JsonResponse({'ok': False, 'error': _('Winner does not match score.')}, status=400)
         if predicted_away_goals > predicted_home_goals and predicted_winner != 'away':
@@ -260,7 +394,7 @@ def save_prediction_ajax(request, match_id):
         predicted_home_goals = None
         predicted_away_goals = None
 
-    bet, _ = Bet.objects.update_or_create(
+    bet, _created = Bet.objects.update_or_create(
         user=request.user,
         match=match,
         defaults={

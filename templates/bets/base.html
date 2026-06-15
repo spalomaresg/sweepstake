@@ -26,13 +26,17 @@
           <span class="md:hidden tracking-wider">⚽ {{ web_title }} {% trans "WC 2026" %}</span>
           <span class="hidden md:inline tracking-widest">⚽ {{ web_title|upper }} {% trans "WORLD CUP 2026" %}</span>
         </a>
-        <a href="{% url 'logout' %}" class="md:hidden text-red-400 hover:text-red-300 transition text-xs font-medium flex-shrink-0">{% trans "Sign out" %}</a>
+        <div class="md:hidden flex items-center gap-3 flex-shrink-0">
+          {% include "bets/_lang_switcher.html" %}
+          <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs font-medium">{% trans "Sign out" %}</a>
+        </div>
         <div class="hidden md:flex items-center gap-5 text-sm font-medium">
           <a href="{% url 'leaderboard' %}" class="hover:text-emerald-400 transition">{% trans "Leaderboard" %}</a>
           <a href="{% url 'my_predictions' %}" class="hover:text-emerald-400 transition">{% trans "My Predictions" %}</a>
           <a href="{% url 'group_standings' %}" class="hover:text-emerald-400 transition">{% trans "Standings" %}</a>
           <span class="text-white/20">|</span>
           <span class="text-white/50 text-xs">{{ user.username }}</span>
+          {% include "bets/_lang_switcher.html" %}
           <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs">{% trans "Sign out" %}</a>
         </div>
       </div>

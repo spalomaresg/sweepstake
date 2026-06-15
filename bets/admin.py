@@ -2,27 +2,63 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
-from .models import SweepstakeTeam, Profile, NationalTeam, Match, Bet
+from .models import Sweepstake, SweepstakeMembership, SweepstakeTeam, Profile, NationalTeam, Match, Bet
 
 
-class ProfileInline(admin.StackedInline):
-    model = Profile
-    can_delete = False
-    verbose_name_plural = 'Profile'
-    fields = ('team', 'excluded_from_team_stats')
+# ── Sweepstake ────────────────────────────────────────────────────────────────
+
+class SweepstakeMembershipInline(admin.TabularInline):
+    model = SweepstakeMembership
+    extra = 0
+    fields = ('user', 'team', 'excluded_from_team_stats', 'joined_at')
+    readonly_fields = ('joined_at',)
+    autocomplete_fields = ('user',)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'team':
+            sweepstake_id = request.resolver_match.kwargs.get('object_id')
+            if sweepstake_id:
+                kwargs['queryset'] = SweepstakeTeam.objects.filter(sweepstake_id=sweepstake_id)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(Sweepstake)
+class SweepstakeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'invite_code', 'member_count', 'created_at']
+    readonly_fields = ['created_at']
+    inlines = [SweepstakeMembershipInline]
+
+    def member_count(self, obj):
+        return obj.memberships.count()
+    member_count.short_description = 'Members'
+
+
+# ── Users + memberships ───────────────────────────────────────────────────────
+
+class UserMembershipInline(admin.TabularInline):
+    model = SweepstakeMembership
+    extra = 0
+    fields = ('sweepstake', 'team', 'excluded_from_team_stats', 'joined_at')
+    readonly_fields = ('joined_at',)
+    verbose_name = "Sweepstake membership"
+    verbose_name_plural = "Sweepstake memberships"
 
 
 class UserAdmin(BaseUserAdmin):
-    inlines = (ProfileInline,)
+    inlines = (UserMembershipInline,)
+    search_fields = ('username', 'first_name', 'last_name', 'email')
 
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 
+# ── Sweepstake Teams ──────────────────────────────────────────────────────────
+
 @admin.register(SweepstakeTeam)
 class SweepstakeTeamAdmin(admin.ModelAdmin):
-    list_display = ['name', 'color_preview', 'num_members', 'average_points']
+    list_display = ['name', 'sweepstake', 'color_preview', 'num_members', 'average_points']
+    list_filter = ['sweepstake']
 
     def color_preview(self, obj):
         return format_html(
@@ -38,6 +74,8 @@ class SweepstakeTeamAdmin(admin.ModelAdmin):
         return obj.average_points
     average_points.short_description = 'Avg Points'
 
+
+# ── National Teams + Matches + Bets ──────────────────────────────────────────
 
 @admin.register(NationalTeam)
 class NationalTeamAdmin(admin.ModelAdmin):
@@ -71,7 +109,6 @@ class MatchAdmin(admin.ModelAdmin):
             for bet in obj.bets.all():
                 bet.points_earned = obj.calculate_bet_points(bet)
                 bet.save()
-
 
 
 @admin.register(Bet)

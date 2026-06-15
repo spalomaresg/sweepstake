@@ -2,15 +2,34 @@ import csv
 import os
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from bets.models import SweepstakeTeam
+from bets.models import SweepstakeTeam, Sweepstake
 
 TEAMS_CSV_PATH = os.path.join(settings.BASE_DIR, 'teams.csv')
 
 
 class Command(BaseCommand):
-    help = 'Load sweepstake teams from teams.csv (columns: team, color)'
+    help = 'Load sweepstake teams from teams.csv (columns: team, color) into a specific sweepstake'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--sweepstake',
+            required=True,
+            help='Sweepstake invite code or name to load teams into',
+        )
 
     def handle(self, *args, **options):
+        sweepstake_ref = options['sweepstake']
+        try:
+            sweepstake = Sweepstake.objects.get(invite_code__iexact=sweepstake_ref)
+        except Sweepstake.DoesNotExist:
+            try:
+                sweepstake = Sweepstake.objects.get(name__iexact=sweepstake_ref)
+            except Sweepstake.DoesNotExist:
+                raise CommandError(
+                    f'No sweepstake found with invite code or name: {sweepstake_ref}\n'
+                    'Create one in the Django admin (/admin/) first.'
+                )
+
         if not os.path.exists(TEAMS_CSV_PATH):
             raise CommandError(f'teams.csv not found at {TEAMS_CSV_PATH}')
 
@@ -24,6 +43,7 @@ class Command(BaseCommand):
                     continue
                 _, is_new = SweepstakeTeam.objects.update_or_create(
                     name=name,
+                    sweepstake=sweepstake,
                     defaults={'color': color},
                 )
                 if is_new:
@@ -32,5 +52,5 @@ class Command(BaseCommand):
                     updated += 1
 
         self.stdout.write(self.style.SUCCESS(
-            f'Done: {created} created, {updated} updated.'
+            f'Done: {created} created, {updated} updated in "{sweepstake.name}".'
         ))

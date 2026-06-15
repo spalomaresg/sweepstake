@@ -1,0 +1,22 @@
+{% load i18n %}
+<div class="flex items-center gap-0.5 text-xs font-mono">
+  <form action="{% url 'set_language' %}" method="post" class="inline">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <input type="hidden" name="language" value="en">
+    <button type="submit"
+      class="px-1.5 py-0.5 rounded transition {% if CURRENT_LANG == 'en' %}text-emerald-400 bg-emerald-500/20{% else %}text-white/30 hover:text-white/70{% endif %}">
+      EN
+    </button>
+  </form>
+  <span class="text-white/20">·</span>
+  <form action="{% url 'set_language' %}" method="post" class="inline">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <input type="hidden" name="language" value="es">
+    <button type="submit"
+      class="px-1.5 py-0.5 rounded transition {% if CURRENT_LANG == 'es' %}text-emerald-400 bg-emerald-500/20{% else %}text-white/30 hover:text-white/70{% endif %}">
+      ES
+    </button>
+  </form>
+</div>

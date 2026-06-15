@@ -98,7 +98,7 @@
               class="min-w-0 md:min-w-[11rem] text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
                 {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
-              {{ match.home_team.flag }} {{ match.home_team.name }}
+              {{ match.home_team.flag }} {% trans match.home_team.name %}
             </button>
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'draw')"{% endif %}
               id="btn-draw-{{ match.id }}"
@@ -112,7 +112,7 @@
               class="min-w-0 md:min-w-[11rem] text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
                 {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
-              {{ match.away_team.flag }} {{ match.away_team.name }}
+              {{ match.away_team.flag }} {% trans match.away_team.name %}
             </button>
 
             <div id="status-{{ match.id }}" class="text-xs hidden col-span-3 w-full mt-0.5"></div>
@@ -124,7 +124,7 @@
             <button id="btn-home-{{ match.id }}"
               class="flex-1 min-w-0 md:flex-none md:min-w-[11rem] text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
                 {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
-              {{ match.home_team.flag }} {{ match.home_team.name }}
+              {{ match.home_team.flag }} {% trans match.home_team.name %}
             </button>
             {% if not locked and phase.is_bettable %}
               <input type="number" min="0" max="20" id="hg-{{ match.id }}"
@@ -144,7 +144,7 @@
             <button id="btn-away-{{ match.id }}"
               class="flex-1 min-w-0 md:flex-none md:min-w-[11rem] text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
                 {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
-              {{ match.away_team.flag }} {{ match.away_team.name }}
+              {{ match.away_team.flag }} {% trans match.away_team.name %}
             </button>
           </div>
           {% if not locked and phase.is_bettable %}
@@ -160,11 +160,11 @@
         {% if match.finished %}
           {% if match.winner == 'home' %}
             <div class="text-sm font-semibold {% if bet and bet.predicted_winner == 'home' %}text-emerald-400{% else %}text-white/70{% endif %}">
-              {{ match.home_team.flag }} {{ match.home_team.name }}
+              {{ match.home_team.flag }} {% trans match.home_team.name %}
             </div>
           {% elif match.winner == 'away' %}
             <div class="text-sm font-semibold {% if bet and bet.predicted_winner == 'away' %}text-emerald-400{% else %}text-white/70{% endif %}">
-              {{ match.away_team.flag }} {{ match.away_team.name }}
+              {{ match.away_team.flag }} {% trans match.away_team.name %}
             </div>
           {% else %}
             <div class="text-sm font-semibold text-white/70">{% trans "Draw" %}</div>
