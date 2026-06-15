@@ -370,7 +370,7 @@ msgid "Czechia"
 msgstr "República Checa"
 
 msgid "DR Congo"
-msgstr "República Democrática del Congo"
+msgstr "RD Congo"
 
 msgid "Ecuador"
 msgstr "Ecuador"
