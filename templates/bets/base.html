@@ -35,7 +35,7 @@
           <a href="{% url 'my_predictions' %}" class="hover:text-emerald-400 transition">{% trans "My Predictions" %}</a>
           <a href="{% url 'group_standings' %}" class="hover:text-emerald-400 transition">{% trans "Standings" %}</a>
           <span class="text-white/20">|</span>
-          <span class="text-white/50 text-xs">{{ user.username }}</span>
+          <a href="{% url 'password_change' %}" class="text-white/50 hover:text-white/80 text-xs transition" title="{% trans 'Change password' %}">{{ user.username }}</a>
           {% include "bets/_lang_switcher.html" %}
           <a href="{% url 'logout' %}" class="text-red-400 hover:text-red-300 transition text-xs">{% trans "Sign out" %}</a>
         </div>
