@@ -249,7 +249,6 @@ def leaderboard(request):
             SweepstakeMembership.objects
             .filter(sweepstake=sweepstake)
             .select_related('user', 'team')
-            .exclude(user__is_staff=True)
         )
 
         individual_ranking = []
