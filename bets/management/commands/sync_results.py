@@ -103,7 +103,7 @@ class Command(BaseCommand):
             status = api_match['status']
 
             if status == 'FINISHED':
-                outcome = self._sync_result(api_match, phase, kickoff, dry_run)
+                outcome = self._sync_result(api_match, phase, kickoff, dry_run, team_by_tla, team_by_name)
                 if outcome == 'updated':   results_updated += 1
                 elif outcome == 'done':    results_done += 1
                 else:                      results_missed += 1
@@ -128,9 +128,11 @@ class Command(BaseCommand):
 
     # ── Result sync ───────────────────────────────────────────────────────────
 
-    def _sync_result(self, api_match, phase, kickoff, dry_run):
+    def _sync_result(self, api_match, phase, kickoff, dry_run, team_by_tla, team_by_name):
+        home = self._resolve_team(api_match['homeTeam'], team_by_tla, team_by_name)
+        away = self._resolve_team(api_match['awayTeam'], team_by_tla, team_by_name)
         try:
-            match = Match.objects.get(kickoff=kickoff, phase=phase)
+            match = Match.objects.get(kickoff=kickoff, home_team=home, away_team=away)
         except Match.DoesNotExist:
             self.stdout.write(
                 f'  ⚠  Not in DB: {kickoff}  '
