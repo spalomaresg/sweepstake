@@ -130,7 +130,7 @@ class Command(BaseCommand):
 
     def _sync_result(self, api_match, phase, kickoff, dry_run):
         try:
-            match = Match.objects.get(kickoff=kickoff)
+            match = Match.objects.get(kickoff=kickoff, phase=phase)
         except Match.DoesNotExist:
             self.stdout.write(
                 f'  ⚠  Not in DB: {kickoff}  '
