@@ -6,7 +6,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
-    WEB_TITLE=(str, 'ThreatFabric'),
     LANGUAGE=(str, 'en'),
 )
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -15,8 +14,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 FOOTBALL_DATA_API_KEY = 'ddaf48ea0ad24db8b68b1738b70f9192'  # legacy (football-data.org, currently down)
-API_FOOTBALL_KEY = env('API_FOOTBALL_KEY', default='')
-WEB_TITLE = env('WEB_TITLE')
+API_FOOTBALL_KEY = 'd9a1336266d43dac48cbc35e902b30d8'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -55,7 +53,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'bets.context_processors.web_title',
             ],
         },
     },

@@ -32,7 +32,6 @@ Create a `.env` file in the project root (next to `manage.py`). This file is git
 SECRET_KEY=replace-this-with-a-long-random-string
 DEBUG=False
 ALLOWED_HOSTS=yourdomain.com,your-server-ip
-WEB_TITLE=YourCompany
 LANGUAGE=en
 ```
 
@@ -42,7 +41,6 @@ For local development:
 SECRET_KEY=any-local-dev-secret
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
-WEB_TITLE=YourCompany
 LANGUAGE=en
 ```
 
@@ -59,16 +57,14 @@ python manage.py shell -c "from django.core.management.utils import get_random_s
 | `SECRET_KEY` | — | Django secret key (required) |
 | `DEBUG` | `False` | Enable Django debug mode |
 | `ALLOWED_HOSTS` | — | Comma-separated list of allowed hosts |
-| `WEB_TITLE` | `ThreatFabric` | Company/brand name shown across the site |
 | `LANGUAGE` | `en` | Interface language — `en` (English) or `es` (Spanish) |
-| `API_FOOTBALL_KEY` | — | api-sports.io key for syncing match results |
 
 ### 3. API key (api-sports.io)
 
-Match results are synced automatically from [api-sports.io](https://api-sports.io) (API-Football v3). Add the key to your `.env` file:
+Match results are synced automatically from [api-sports.io](https://api-sports.io) (API-Football v3). The key is set directly in `worldcup_sweepstake/settings.py`:
 
-```env
-API_FOOTBALL_KEY=your-api-key-here
+```python
+API_FOOTBALL_KEY = 'your-api-key-here'
 ```
 
 Sign up for a free key at [dashboard.api-football.com/register](https://dashboard.api-football.com/register) (no credit card required). The free tier allows 100 requests/day, which is more than enough.

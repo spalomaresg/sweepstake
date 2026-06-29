@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ web_title }} {% trans "World Cup 2026" %}{% endblock %}</title>
+  <title>{% block title %}{% trans "World Cup 2026" %}{% endblock %}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,8 +23,8 @@
       <!-- Main row: logo + desktop links / logo + sign-out (mobile) -->
       <div class="flex items-center justify-between px-6 py-3">
         <a href="{% url 'leaderboard' %}" class="font-display text-xl text-emerald-400">
-          <span class="md:hidden tracking-wider">⚽ {{ web_title }} {% trans "WC 2026" %}</span>
-          <span class="hidden md:inline tracking-widest">⚽ {{ web_title|upper }} {% trans "WORLD CUP 2026" %}</span>
+          <span class="md:hidden tracking-wider">⚽ {% trans "WC 2026" %}</span>
+          <span class="hidden md:inline tracking-widest">⚽ {% trans "WORLD CUP 2026" %}</span>
         </a>
         <div class="md:hidden flex items-center gap-3 flex-shrink-0">
           {% include "bets/_lang_switcher.html" %}

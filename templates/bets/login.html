@@ -1,10 +1,10 @@
 {% extends 'bets/base.html' %}
 {% load i18n %}
-{% block title %}{% trans "Sign in" %} — {{ web_title }} {% trans "World Cup 2026" %}{% endblock %}
+{% block title %}{% trans "Sign in" %} — {% trans "World Cup 2026" %}{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto mt-16">
   <div class="glass rounded-2xl p-8">
-    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">{{ web_title|upper }} {% trans "WORLD CUP 2026" %}</h1>
+    <h1 class="font-display text-4xl text-emerald-400 mb-2 text-center">{% trans "WORLD CUP 2026" %}</h1>
     <p class="text-center text-white/40 text-sm mb-6">{% trans "Sign in to continue" %}</p>
     <form method="post" class="space-y-4">
       {% csrf_token %}
