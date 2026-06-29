@@ -61,16 +61,17 @@ python manage.py shell -c "from django.core.management.utils import get_random_s
 | `ALLOWED_HOSTS` | — | Comma-separated list of allowed hosts |
 | `WEB_TITLE` | `ThreatFabric` | Company/brand name shown across the site |
 | `LANGUAGE` | `en` | Interface language — `en` (English) or `es` (Spanish) |
+| `API_FOOTBALL_KEY` | — | api-sports.io key for syncing match results |
 
-### 3. API key (football-data.org)
+### 3. API key (api-sports.io)
 
-Match results are synced automatically from [football-data.org](https://www.football-data.org). The API key is set directly in `worldcup_sweepstake/settings.py`:
+Match results are synced automatically from [api-sports.io](https://api-sports.io) (API-Football v3). Add the key to your `.env` file:
 
-```python
-FOOTBALL_DATA_API_KEY = 'your-api-key-here'
+```env
+API_FOOTBALL_KEY=your-api-key-here
 ```
 
-Sign up for a free key at football-data.org (no credit card required). The free tier allows 10 requests/minute, which is more than enough.
+Sign up for a free key at [dashboard.api-football.com/register](https://dashboard.api-football.com/register) (no credit card required). The free tier allows 100 requests/day, which is more than enough.
 
 ### 4. Initialise the database
 
@@ -216,7 +217,7 @@ Loads 48 national teams (with flags) and 72 group stage matches. Safe to re-run 
 
 ### Sync match results and create fixtures
 
-Fetches data from the football-data.org API:
+Fetches data from the api-sports.io API (FIFA World Cup 2026, league ID 1):
 
 - **Finished matches** — updates scores and recalculates points for all affected predictions
 - **Upcoming knockout matches** — creates fixtures in the database once the API publishes the bracket (after each round completes)
@@ -229,12 +230,6 @@ Preview without saving:
 
 ```bash
 python manage.py sync_results --dry-run
-```
-
-Override the competition code if needed (default: `WC`):
-
-```bash
-python manage.py sync_results --competition WC2026
 ```
 
 ---
@@ -259,6 +254,27 @@ Sync schedule per match (relative to expected final whistle = kickoff + 90 min):
 When no matches are pending (e.g. between phases), the scheduler calls `sync_results` once per hour to pick up newly published knockout fixtures from the API.
 
 In production this runs as a systemd service — see [Deployment](#deploying-to-a-server-nginx--gunicorn) below.
+
+---
+
+### Create knockout fixtures
+
+Creates match fixtures for a knockout phase based on actual results — no results are simulated. Run this once each round's bracket is determined.
+
+For **Round of 32**: resolves teams automatically from the group stage standings using the official FIFA bracket (group winners, runners-up, and best 8 third-place teams).
+
+For **later rounds**: pairs up winners from the previous finished phase.
+
+```bash
+python manage.py create_fixture round_of_32
+python manage.py create_fixture round_of_16
+python manage.py create_fixture quarterfinals
+python manage.py create_fixture semifinals
+python manage.py create_fixture third_place
+python manage.py create_fixture final
+```
+
+> **Note:** `sync_results` also creates upcoming knockout fixtures automatically once the API publishes the bracket. Use `create_fixture` if you prefer to create them manually or if the API hasn't published them yet.
 
 ---
 
@@ -336,6 +352,7 @@ worldcup_sweepstake/
 │   │       ├── load_data.py           # Load teams and group stage fixtures
 │   │       ├── load_teams.py          # Load sweepstake teams from teams.csv
 │   │       ├── sync_results.py        # Sync results + create knockout fixtures
+│   │       ├── create_fixture.py      # Create knockout fixtures from actual standings
 │   │       ├── start_sync_scheduler.py# Production: auto-sync after each match
 │   │       └── simulate_phase.py      # Testing: simulate match results
 │   ├── models.py                  # Data models

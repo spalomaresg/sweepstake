@@ -23,9 +23,8 @@ from bets.models import (
 )
 
 # ── Official FIFA WC 2026 Round of 32 bracket ─────────────────────────────
-# Source: ESPN / NBC Sports / Sky Sports confirmed schedule
 # Format: (match_no, home_slot, away_slot, date_utc, venue)
-# Slots: "X1"=winner group X, "X2"=runner-up group X, "X3"=best 3rd from X
+# Slots: "X1"=winner group X, "X2"=runner-up group X, "3rd_XYZ"=best 3rd from those groups
 # 3rd-place slots are resolved at runtime based on actual standings.
 
 ROUND_OF_32 = [

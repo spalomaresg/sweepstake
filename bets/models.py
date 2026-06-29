@@ -202,9 +202,7 @@ def auto_create_next_phase_matches():
     If a phase just completed, create the bracket matches for the next phase
     so users can immediately place bets.
     """
-    from bets.management.commands.simulate_phase import (
-        Command as SimCmd, ROUND_OF_32
-    )
+    from bets.management.commands.simulate_phase import Command as SimCmd
     import io
     cmd = SimCmd()
     cmd.stdout = io.StringIO()
