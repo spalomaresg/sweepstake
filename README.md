@@ -59,15 +59,15 @@ python manage.py shell -c "from django.core.management.utils import get_random_s
 | `ALLOWED_HOSTS` | — | Comma-separated list of allowed hosts |
 | `LANGUAGE` | `en` | Interface language — `en` (English) or `es` (Spanish) |
 
-### 3. API key (api-sports.io)
+### 3. API key (football-data.org)
 
-Match results are synced automatically from [api-sports.io](https://api-sports.io) (API-Football v3). The key is set directly in `worldcup_sweepstake/settings.py`:
+Match results are synced automatically from [football-data.org](https://www.football-data.org). The key is set directly in `worldcup_sweepstake/settings.py`:
 
 ```python
-API_FOOTBALL_KEY = 'your-api-key-here'
+FOOTBALL_DATA_API_KEY = 'your-api-key-here'
 ```
 
-Sign up for a free key at [dashboard.api-football.com/register](https://dashboard.api-football.com/register) (no credit card required). The free tier allows 100 requests/day, which is more than enough.
+Sign up for a free key at football-data.org (no credit card required). The free tier allows 10 requests/minute, which is more than enough.
 
 ### 4. Initialise the database
 
@@ -213,7 +213,7 @@ Loads 48 national teams (with flags) and 72 group stage matches. Safe to re-run 
 
 ### Sync match results and create fixtures
 
-Fetches data from the api-sports.io API (FIFA World Cup 2026, league ID 1):
+Fetches data from the football-data.org API:
 
 - **Finished matches** — updates scores and recalculates points for all affected predictions
 - **Upcoming knockout matches** — creates fixtures in the database once the API publishes the bracket (after each round completes)
@@ -226,6 +226,12 @@ Preview without saving:
 
 ```bash
 python manage.py sync_results --dry-run
+```
+
+Override the competition code if needed (default: `WC`):
+
+```bash
+python manage.py sync_results --competition WC
 ```
 
 ---
