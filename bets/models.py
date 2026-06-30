@@ -161,41 +161,6 @@ POINTS_BY_PHASE = {
 }
 
 
-def get_bettable_phases():
-    """
-    Returns the set of phase keys users are currently allowed to bet on.
-
-    Walk phases in order:
-    - If a phase has unfinished matches → it is the active bettable phase. Stop.
-    - If a phase is fully finished → move on to the next.
-    - If a phase has NO matches yet → it is the next upcoming phase. Mark bettable. Stop.
-    - Special: after all semifinals finish, unlock third_place AND final together.
-    """
-    bettable = set()
-
-    for phase_key in PHASE_ORDER:
-        phase_matches = Match.objects.filter(phase=phase_key)
-
-        if not phase_matches.exists():
-            bettable.add(phase_key)
-            if phase_key == 'third_place':
-                bettable.add('final')
-            elif phase_key == 'final':
-                bettable.add('third_place')
-            break
-
-        unfinished = phase_matches.filter(finished=False).exists()
-
-        if unfinished:
-            bettable.add(phase_key)
-            break
-        else:
-            if phase_key == 'semifinals':
-                bettable.add('third_place')
-                bettable.add('final')
-                break
-
-    return bettable
 
 
 def auto_create_next_phase_matches():

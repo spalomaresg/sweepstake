@@ -16,7 +16,7 @@ import json
 from .models import (Match, Bet, SweepstakeTeam, Profile, NationalTeam,
                      Sweepstake, SweepstakeMembership,
                      PHASE_CHOICES, PHASE_ORDER, POINTS_BY_PHASE,
-                     get_bettable_phases, get_group_standings)
+                     get_group_standings)
 from .forms import BetForm
 
 
@@ -296,7 +296,6 @@ def leaderboard(request):
 @login_required
 def my_predictions(request):
     now = timezone.now()
-    bettable = get_bettable_phases()
 
     phases_data = []
 
@@ -304,9 +303,9 @@ def my_predictions(request):
         all_matches = Match.objects.filter(phase=phase_key).select_related(
             'home_team', 'away_team').order_by('kickoff')
         has_matches = all_matches.exists()
-        is_bettable = phase_key in bettable
+        is_bettable = all_matches.filter(kickoff__gt=now).exists()
 
-        if not has_matches and not is_bettable:
+        if not has_matches:
             continue
 
         user_bets_qs = request.user.bets.filter(
@@ -331,7 +330,6 @@ def my_predictions(request):
             'key': phase_key,
             'label': phase_label,
             'rows': rows,
-            'has_matches': has_matches,
             'points_winner': pts[0],
             'points_exact': pts[1],
             'allows_score': phase_key != 'group_stage',
@@ -340,7 +338,10 @@ def my_predictions(request):
         })
 
     total_points = request.user.bets.aggregate(t=Sum('points_earned'))['t'] or 0
-    active_phase_key = phases_data[-1]['key'] if phases_data else None
+    active_phase_key = next(
+        (p['key'] for p in phases_data if not p['is_complete']),
+        phases_data[-1]['key'] if phases_data else None,
+    )
 
     return render(request, 'bets/my_predictions.html', {
         'phases_data': phases_data,
@@ -359,10 +360,6 @@ def save_prediction_ajax(request, match_id):
 
     if now >= match.kickoff:
         return JsonResponse({'ok': False, 'error': _('Match has already started.')}, status=400)
-
-    bettable = get_bettable_phases()
-    if match.phase not in bettable:
-        return JsonResponse({'ok': False, 'error': _('Betting not open for this phase yet.')}, status=400)
 
     try:
         data = json.loads(request.body)

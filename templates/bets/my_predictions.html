@@ -29,21 +29,9 @@
     <span class="font-semibold text-white/80">{{ phase.label }} {% trans "scoring:" %}</span>
     <span>🎯 {% trans "Correct winner" %} = <strong class="text-emerald-400">{% blocktrans count points=phase.points_winner %}{{ points }} pt{% plural %}{{ points }} pts{% endblocktrans %}</strong></span>
     {% if phase.points_exact %}<span>🔢 {% trans "Exact score" %} = <strong class="text-yellow-400">{{ phase.points_exact }} pts</strong></span>{% endif %}
-    {% if not phase.is_bettable %}
-      {% if phase.is_complete %}<span class="ml-auto text-white/30 text-xs italic">🔒 {% trans "Locked" %}</span>
-      {% else %}<span class="ml-auto text-white/30 text-xs italic">🔒 {% trans "Not open yet" %}</span>{% endif %}
-    {% endif %}
+    {% if not phase.is_bettable %}<span class="ml-auto text-white/30 text-xs italic">🔒 {% trans "Locked" %}</span>{% endif %}
   </div>
 
-  {% if not phase.has_matches %}
-  <!-- No matches yet -->
-  <div class="glass rounded-2xl px-6 py-12 text-center text-white/40">
-    <div class="text-4xl mb-3">🏗️</div>
-    <div class="font-semibold text-white/60 mb-1">{% trans "The bracket is being assembled…" %}</div>
-    <div class="text-sm">{% trans "Our admin is working hard filling in the fixtures. Check back soon — and start thinking about your picks!" %}</div>
-  </div>
-
-  {% else %}
   <!-- Table -->
   <div class="glass rounded-2xl overflow-hidden">
     <!-- Desktop-only column headers -->
@@ -194,7 +182,6 @@
     {% endwith %}
     {% endfor %}
   </div>
-  {% endif %}{# has_matches #}
 </div>
 {% endfor %}
 
