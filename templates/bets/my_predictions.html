@@ -171,9 +171,9 @@
           {% endif %}
           <div class="text-xs text-white/40 font-mono mt-0.5">
             {% if match.is_knockout and match.home_goals == match.away_goals and match.penalty_home_goals is not None %}
-              {{ match.home_goals }} ({{ match.penalty_home_goals }})–{{ match.away_goals }} ({{ match.penalty_away_goals }})
+              {{ match.home_goals }}({{ match.penalty_home_goals }}) – {{ match.away_goals }}({{ match.penalty_away_goals }})
             {% else %}
-              {{ match.home_goals }}–{{ match.away_goals }}
+              {{ match.home_goals }} – {{ match.away_goals }}
             {% endif %}
           </div>
         {% else %}
