@@ -110,7 +110,7 @@
           {# ── KNOCKOUT: score inputs + auto-winner ─── #}
           <div class="flex items-center gap-1 md:gap-2 flex-wrap">
             <button id="btn-home-{{ match.id }}"
-              class="flex-1 min-w-0 md:flex-none md:min-w-[11rem] text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
+              class="flex-1 min-w-0 text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
                 {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
               {{ match.home_team.flag }} {% trans match.home_team.name %}
             </button>
@@ -130,7 +130,7 @@
               </span>
             {% endif %}
             <button id="btn-away-{{ match.id }}"
-              class="flex-1 min-w-0 md:flex-none md:min-w-[11rem] text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
+              class="flex-1 min-w-0 text-center px-2 md:px-3 py-2 rounded-lg border text-xs md:text-sm leading-tight transition cursor-default
                 {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold{% else %}border-white/10 text-white/40{% endif %}">
               {{ match.away_team.flag }} {% trans match.away_team.name %}
             </button>
