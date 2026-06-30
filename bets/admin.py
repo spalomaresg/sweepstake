@@ -87,28 +87,23 @@ class NationalTeamAdmin(admin.ModelAdmin):
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'phase', 'kickoff', 'score', 'home_goals',
-                    'away_goals', 'knockout_winner', 'finished']
+                    'away_goals', 'penalty_home_goals', 'penalty_away_goals',
+                    'knockout_winner', 'finished']
     list_filter = ['phase', 'finished']
-    list_editable = ['home_goals', 'away_goals', 'knockout_winner', 'finished']
+    list_editable = ['home_goals', 'away_goals', 'penalty_home_goals', 'penalty_away_goals',
+                     'knockout_winner', 'finished']
     ordering = ['kickoff']
-    help_text = (
-        "For knockout matches that go to extra time/penalties: set home_goals and away_goals "
-        "to the 90-min score, then set knockout_winner to who actually advanced."
-    )
 
     def score(self, obj):
         if obj.home_goals is not None and obj.away_goals is not None:
+            if obj.knockout_winner and obj.home_goals == obj.away_goals and obj.penalty_home_goals is not None:
+                return format_html('<strong>{} ({}) – {} ({})</strong>',
+                                   obj.home_goals, obj.penalty_home_goals,
+                                   obj.away_goals, obj.penalty_away_goals)
             suffix = f" ({obj.knockout_winner} adv.)" if obj.knockout_winner and obj.home_goals == obj.away_goals else ""
             return format_html('<strong>{} – {}</strong>{}', obj.home_goals, obj.away_goals, suffix)
         return '—'
     score.short_description = 'Score'
-
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if obj.finished:
-            for bet in obj.bets.all():
-                bet.points_earned = obj.calculate_bet_points(bet)
-                bet.save()
 
 
 @admin.register(Bet)
