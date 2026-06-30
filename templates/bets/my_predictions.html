@@ -169,7 +169,13 @@
           {% else %}
             <div class="text-sm font-semibold text-white/70">{% trans "Draw" %}</div>
           {% endif %}
-          <div class="text-xs text-white/40 font-mono mt-0.5">{{ match.home_goals }}–{{ match.away_goals }}{% if match.knockout_winner and match.home_goals == match.away_goals %} {% trans "(pens)" %}{% endif %}</div>
+          <div class="text-xs text-white/40 font-mono mt-0.5">
+            {% if match.is_knockout and match.home_goals == match.away_goals and match.penalty_home_goals is not None %}
+              {{ match.home_goals }} ({{ match.penalty_home_goals }})–{{ match.away_goals }} ({{ match.penalty_away_goals }})
+            {% else %}
+              {{ match.home_goals }}–{{ match.away_goals }}
+            {% endif %}
+          </div>
         {% else %}
           <span class="text-white/20 text-xs hidden md:inline">—</span>
         {% endif %}

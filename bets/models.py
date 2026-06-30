@@ -292,6 +292,8 @@ class Match(models.Model):
     kickoff = models.DateTimeField()
     home_goals = models.IntegerField(null=True, blank=True)
     away_goals = models.IntegerField(null=True, blank=True)
+    penalty_home_goals = models.IntegerField(null=True, blank=True)
+    penalty_away_goals = models.IntegerField(null=True, blank=True)
     knockout_winner = models.CharField(max_length=4, null=True, blank=True,
         help_text="Knockout only: who advanced (home/away) after extra time/pens")
     finished = models.BooleanField(default=False)

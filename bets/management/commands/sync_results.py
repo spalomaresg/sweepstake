@@ -144,18 +144,34 @@ class Command(BaseCommand):
             return 'done'
 
         score = api_match['score']
-        home_goals = score['fullTime']['home']
-        away_goals = score['fullTime']['away']
         api_winner = score['winner']  # 'HOME_TEAM' | 'AWAY_TEAM' | 'DRAW'
 
+        # Use extraTime score when ET was played (cumulative, includes regular time goals).
+        # This ensures home_goals/away_goals reflect the actual pre-penalty score.
+        extra = score.get('extraTime') or {}
+        if extra.get('home') is not None:
+            home_goals = extra['home']
+            away_goals = extra['away']
+        else:
+            home_goals = score['fullTime']['home']
+            away_goals = score['fullTime']['away']
+
+        # Penalty shootout goals — stored separately for display
+        pens = score.get('penalties') or {}
+        penalty_home = pens.get('home')
+        penalty_away = pens.get('away')
+
         if dry_run:
+            pen_str = f'  pens {penalty_home}–{penalty_away}' if penalty_home is not None else ''
             self.stdout.write(
-                f'  ~ {match}  →  {home_goals}–{away_goals}  ({api_winner})'
+                f'  ~ {match}  →  {home_goals}–{away_goals}{pen_str}  ({api_winner})'
             )
             return 'updated'
 
         match.home_goals = home_goals
         match.away_goals = away_goals
+        match.penalty_home_goals = penalty_home
+        match.penalty_away_goals = penalty_away
         match.finished = True
 
         if match.is_knockout:
@@ -174,8 +190,9 @@ class Command(BaseCommand):
                 for bet in bets:
                     bet.save(update_fields=['points_earned'])
 
+        pen_str = f'  pens {penalty_home}–{penalty_away}' if penalty_home is not None else ''
         self.stdout.write(
-            self.style.SUCCESS(f'  ✓  {match}  →  {home_goals}–{away_goals}')
+            self.style.SUCCESS(f'  ✓  {match}  →  {home_goals}–{away_goals}{pen_str}')
         )
         return 'updated'
 
