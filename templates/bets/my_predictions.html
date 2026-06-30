@@ -125,8 +125,14 @@
                 oninput="onScore({{ match.id }})"
                 class="w-10 md:w-12 px-1 md:px-2 py-2 rounded-lg bg-gray-800 border border-white/20 text-white text-sm text-center focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
             {% else %}
-              <span class="text-white/50 font-mono text-sm w-28 md:w-32 text-center flex-shrink-0">
-                {% if bet and bet.predicted_home_goals is not None %}{{ bet.predicted_home_goals }}–{{ bet.predicted_away_goals }}{% else %}—{% endif %}
+              <span class="text-white/50 font-mono text-sm w-10 md:w-12 text-center flex-shrink-0">
+                {% if bet and bet.predicted_home_goals is not None %}{{ bet.predicted_home_goals }}{% endif %}
+              </span>
+              <span class="text-white/30 font-mono w-4 text-center flex-shrink-0">
+                {% if bet and bet.predicted_home_goals is not None %}–{% else %}—{% endif %}
+              </span>
+              <span class="text-white/50 font-mono text-sm w-10 md:w-12 text-center flex-shrink-0">
+                {% if bet and bet.predicted_away_goals is not None %}{{ bet.predicted_away_goals }}{% endif %}
               </span>
             {% endif %}
             <button id="btn-away-{{ match.id }}"
