@@ -83,21 +83,21 @@
           <div class="grid grid-cols-3 gap-2 md:flex md:items-center md:flex-wrap">
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'home')"{% endif %}
               id="btn-home-{{ match.id }}"
-              class="min-w-0 md:min-w-[11rem] text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
+              class="min-w-0 md:flex-1 text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
                 {% if bet and bet.predicted_winner == 'home' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
               {{ match.home_team.flag }} {% trans match.home_team.name %}
             </button>
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'draw')"{% endif %}
               id="btn-draw-{{ match.id }}"
-              class="min-w-0 md:w-20 text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm transition
+              class="min-w-0 md:flex-none md:w-20 text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm transition
                 {% if bet and bet.predicted_winner == 'draw' %}bg-blue-500/20 border-blue-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
               {% trans "Draw" %}
             </button>
             <button {% if not locked and phase.is_bettable %}onclick="selectGroup({{ match.id }}, 'away')"{% endif %}
               id="btn-away-{{ match.id }}"
-              class="min-w-0 md:min-w-[11rem] text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
+              class="min-w-0 md:flex-1 text-center px-2 md:px-3 py-1.5 md:py-2 rounded-lg border text-xs md:text-sm leading-tight transition
                 {% if bet and bet.predicted_winner == 'away' %}bg-emerald-500/20 border-emerald-500/50 text-white font-semibold
                 {% else %}border-white/10 text-white/50 {% if not locked and phase.is_bettable %}hover:border-white/30 hover:text-white cursor-pointer{% else %}cursor-default{% endif %}{% endif %}">
               {{ match.away_team.flag }} {% trans match.away_team.name %}
