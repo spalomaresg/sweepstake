@@ -1,5 +1,7 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 
@@ -373,3 +375,17 @@ class Bet(models.Model):
         unique_together = ('user', 'match')
         verbose_name = "Bet"
         verbose_name_plural = "Bets"
+
+
+@receiver(post_save, sender=Match)
+def update_bet_points_on_finish(sender, instance, **kwargs):
+    if not instance.finished:
+        return
+    bets = list(instance.bets.all())
+    if not bets:
+        return
+    for bet in bets:
+        bet.points_earned = instance.calculate_bet_points(bet)
+    with transaction.atomic():
+        for bet in bets:
+            bet.save(update_fields=['points_earned'])

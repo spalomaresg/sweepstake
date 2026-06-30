@@ -11,7 +11,6 @@ import urllib.error
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import transaction
 
 from bets.models import Match, NationalTeam
 
@@ -180,15 +179,7 @@ class Command(BaseCommand):
             elif api_winner == 'AWAY_TEAM':
                 match.knockout_winner = 'away'
 
-        match.save()
-
-        bets = list(match.bets.all())
-        for bet in bets:
-            bet.points_earned = match.calculate_bet_points(bet)
-        if bets:
-            with transaction.atomic():
-                for bet in bets:
-                    bet.save(update_fields=['points_earned'])
+        match.save()  # triggers update_bet_points_on_finish signal
 
         pen_str = f'  pens {penalty_home}–{penalty_away}' if penalty_home is not None else ''
         self.stdout.write(
