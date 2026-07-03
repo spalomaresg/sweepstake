@@ -402,15 +402,24 @@ function lockMatchUI(matchId, allowsScore) {
     if (hgEl && agEl) {
       const hgVal = hgEl.value;
       const agVal = agEl.value;
-      const scoreText = (hgVal !== '' && agVal !== '')
-        ? `${hgVal}–${agVal}`
-        : '—';
-      const staticScore = document.createElement('span');
-      staticScore.className = 'text-white/50 font-mono text-sm px-1';
-      staticScore.textContent = scoreText;
-      if (dashEl) dashEl.remove();
-      agEl.replaceWith(staticScore);
-      hgEl.remove();
+      const hasPrediction = hgVal !== '' && agVal !== '';
+
+      const hgSpan = document.createElement('span');
+      hgSpan.className = 'text-white/50 font-mono text-sm w-10 md:w-12 text-center flex-shrink-0';
+      hgSpan.textContent = hasPrediction ? hgVal : '';
+
+      const agSpan = document.createElement('span');
+      agSpan.className = 'text-white/50 font-mono text-sm w-10 md:w-12 text-center flex-shrink-0';
+      agSpan.textContent = hasPrediction ? agVal : '';
+
+      if (dashEl) {
+        dashEl.className = 'text-white/30 font-mono w-4 text-center flex-shrink-0';
+        dashEl.textContent = hasPrediction ? '–' : '—';
+      }
+
+      hgEl.replaceWith(hgSpan);
+      agEl.replaceWith(agSpan);
+
       const dp = document.getElementById('draw-picker-' + matchId);
       if (dp) dp.remove();
       ['home','away'].forEach(side => {
