@@ -84,8 +84,17 @@ class NationalTeamAdmin(admin.ModelAdmin):
     search_fields = ['name', 'code']
 
 
+class BetInline(admin.TabularInline):
+    model = Bet
+    extra = 0
+    fields = ('user', 'predicted_winner', 'predicted_home_goals', 'predicted_away_goals', 'points_earned')
+    readonly_fields = ('points_earned',)
+    ordering = ('user__username',)
+
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
+    inlines = [BetInline]
     list_display = ['__str__', 'phase', 'kickoff', 'score', 'home_goals',
                     'away_goals', 'penalty_home_goals', 'penalty_away_goals',
                     'knockout_winner', 'finished']
