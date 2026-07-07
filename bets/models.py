@@ -5,6 +5,31 @@ from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 
+PHASE_CHOICES = [
+    ('group_stage',   _('Group Stage')),
+    ('round_of_32',   _('Round of 32')),
+    ('round_of_16',   _('Round of 16')),
+    ('quarterfinals', _('Quarter-finals')),
+    ('semifinals',    _('Semi-finals')),
+    ('third_place',   _('Third Place')),
+    ('final',         _('Final')),
+]
+
+PHASE_ORDER = [p[0] for p in PHASE_CHOICES]
+
+CONCURRENT_PHASES = {'third_place', 'final'}
+
+POINTS_BY_PHASE = {
+    'group_stage':   (1, None),
+    'round_of_32':   (1, 2),
+    'round_of_16':   (1, 2),
+    'quarterfinals': (2, 4),
+    'semifinals':    (2, 4),
+    'third_place':   (2, 4),
+    'final':         (5, 10),
+}
+
+
 class Sweepstake(models.Model):
     name = models.CharField(max_length=100)
     invite_code = models.CharField(max_length=50, unique=True)
@@ -160,31 +185,6 @@ class NationalTeam(models.Model):
         verbose_name_plural = "National Teams"
 
 
-PHASE_CHOICES = [
-    ('group_stage',   _('Group Stage')),
-    ('round_of_32',   _('Round of 32')),
-    ('round_of_16',   _('Round of 16')),
-    ('quarterfinals', _('Quarter-finals')),
-    ('semifinals',    _('Semi-finals')),
-    ('third_place',   _('Third Place')),
-    ('final',         _('Final')),
-]
-
-PHASE_ORDER = [p[0] for p in PHASE_CHOICES]
-
-# Phases that can be bet on simultaneously (once semis are done)
-CONCURRENT_PHASES = {'third_place', 'final'}
-
-# (points_winner, points_exact)
-POINTS_BY_PHASE = {
-    'group_stage':   (1, None),
-    'round_of_32':   (1, 2),
-    'round_of_16':   (1, 2),
-    'quarterfinals': (2, 4),
-    'semifinals':    (2, 4),
-    'third_place':   (2, 4),
-    'final':         (5, 10),
-}
 
 
 
