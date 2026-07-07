@@ -266,10 +266,10 @@ def leaderboard(request):
         team_ranking = []
         for t in teams:
             phase_pts = t.points_by_phase()
+            average = round(sum(phase_pts.get(k, 0) for k, _ in ordered_phases), 2)
             team_ranking.append({
                 'team': t,
-                'average': t.average_points,
-                'total': t.total_points,
+                'average': average,
                 'members': t._active_members().count(),
                 'phase_points': phase_pts,
             })
