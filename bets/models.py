@@ -31,32 +31,42 @@ class SweepstakeTeam(models.Model):
         return self.name
 
     def _active_members(self):
-        """SweepstakeMembership rows counted in team stats (not excluded)."""
-        return self.members.filter(excluded_from_team_stats=False)
+        """All members counted in team stats."""
+        return self.members.all()
 
-    @property
-    def average_points(self):
-        members = self._active_members()
-        count = members.count()
-        if not count:
-            return 0
-        total = sum(m.user.bets.aggregate(t=models.Sum('points_earned'))['t'] or 0 for m in members)
-        return round(total / count, 2)
+    def _members_for_phase(self, phase_key):
+        """Members not excluded from a specific phase."""
+        excluded_user_ids = MembershipPhaseExclusion.objects.filter(
+            membership__team=self,
+            membership__sweepstake=self.sweepstake,
+            phase=phase_key,
+        ).values_list('membership__user_id', flat=True)
+        return self.members.exclude(user_id__in=excluded_user_ids)
 
     @property
     def total_points(self):
-        return sum(
-            m.user.bets.aggregate(t=models.Sum('points_earned'))['t'] or 0
-            for m in self._active_members()
-        )
+        total = 0
+        for phase_key, _ in PHASE_CHOICES:
+            for m in self._members_for_phase(phase_key):
+                total += m.user.bets.filter(match__phase=phase_key).aggregate(
+                    t=models.Sum('points_earned'))['t'] or 0
+        return total
+
+    @property
+    def average_points(self):
+        count = self._active_members().count()
+        if not count:
+            return 0
+        return round(self.total_points / count, 2)
 
     def points_by_phase(self):
-        members = self._active_members()
-        count = members.count()
         result = {}
         for phase_key, _ in PHASE_CHOICES:
+            members = self._members_for_phase(phase_key)
+            count = members.count()
             total = sum(
-                m.user.bets.filter(match__phase=phase_key).aggregate(t=models.Sum('points_earned'))['t'] or 0
+                m.user.bets.filter(match__phase=phase_key).aggregate(
+                    t=models.Sum('points_earned'))['t'] or 0
                 for m in members
             )
             result[phase_key] = round(total / count, 2) if count else 0
@@ -115,6 +125,22 @@ class SweepstakeMembership(models.Model):
         verbose_name = "Sweepstake Membership"
         verbose_name_plural = "Sweepstake Memberships"
         ordering = ['sweepstake__name', 'user__username']
+
+
+class MembershipPhaseExclusion(models.Model):
+    membership = models.ForeignKey(
+        SweepstakeMembership, on_delete=models.CASCADE, related_name='phase_exclusions'
+    )
+    phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
+
+    class Meta:
+        unique_together = ('membership', 'phase')
+        ordering = ['membership__user__username', 'phase']
+        verbose_name = "Phase Exclusion"
+        verbose_name_plural = "Phase Exclusions"
+
+    def __str__(self):
+        return f"{self.membership.user.username} — {self.phase}"
 
 
 class NationalTeam(models.Model):

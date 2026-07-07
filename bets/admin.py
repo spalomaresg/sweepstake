@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
-from .models import Sweepstake, SweepstakeMembership, SweepstakeTeam, Profile, NationalTeam, Match, Bet
+from .models import Sweepstake, SweepstakeMembership, SweepstakeTeam, Profile, NationalTeam, Match, Bet, MembershipPhaseExclusion
 
 
 # ── Sweepstake ────────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ from .models import Sweepstake, SweepstakeMembership, SweepstakeTeam, Profile, N
 class SweepstakeMembershipInline(admin.TabularInline):
     model = SweepstakeMembership
     extra = 0
-    fields = ('user', 'team', 'excluded_from_team_stats', 'joined_at')
+    fields = ('user', 'team', 'joined_at')
     readonly_fields = ('joined_at',)
     autocomplete_fields = ('user',)
 
@@ -38,7 +38,7 @@ class SweepstakeAdmin(admin.ModelAdmin):
 class UserMembershipInline(admin.TabularInline):
     model = SweepstakeMembership
     extra = 0
-    fields = ('sweepstake', 'team', 'excluded_from_team_stats', 'joined_at')
+    fields = ('sweepstake', 'team', 'joined_at')
     readonly_fields = ('joined_at',)
     verbose_name = "Sweepstake membership"
     verbose_name_plural = "Sweepstake memberships"
@@ -73,6 +73,27 @@ class SweepstakeTeamAdmin(admin.ModelAdmin):
     def average_points(self, obj):
         return obj.average_points
     average_points.short_description = 'Avg Points'
+
+
+# ── Memberships (standalone, for phase exclusion management) ─────────────────
+
+class MembershipPhaseExclusionInline(admin.TabularInline):
+    model = MembershipPhaseExclusion
+    extra = 1
+    fields = ('phase',)
+
+
+@admin.register(SweepstakeMembership)
+class SweepstakeMembershipAdmin(admin.ModelAdmin):
+    list_display = ['user', 'sweepstake', 'team', 'excluded_phases_display']
+    list_filter = ['sweepstake', 'team']
+    search_fields = ['user__username']
+    inlines = [MembershipPhaseExclusionInline]
+
+    def excluded_phases_display(self, obj):
+        phases = obj.phase_exclusions.values_list('phase', flat=True)
+        return ', '.join(phases) if phases else '—'
+    excluded_phases_display.short_description = 'Excluded from phases'
 
 
 # ── National Teams + Matches + Bets ──────────────────────────────────────────
