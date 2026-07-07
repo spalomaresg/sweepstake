@@ -154,7 +154,7 @@ POINTS_BY_PHASE = {
     'group_stage':   (1, None),
     'round_of_32':   (1, 2),
     'round_of_16':   (1, 2),
-    'quarterfinals': (1, 2),
+    'quarterfinals': (2, 4),
     'semifinals':    (2, 4),
     'third_place':   (2, 4),
     'final':         (5, 10),
