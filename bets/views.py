@@ -298,8 +298,13 @@ def my_predictions(request):
     now = timezone.now()
 
     phases_data = []
+    phase_label_map = dict(PHASE_CHOICES)
+    combined_keys = {'third_place', 'final'}
 
     for phase_key, phase_label in PHASE_CHOICES:
+        if phase_key in combined_keys:
+            continue
+
         all_matches = Match.objects.filter(phase=phase_key).select_related(
             'home_team', 'away_team').order_by('kickoff')
         has_matches = all_matches.exists()
@@ -335,6 +340,44 @@ def my_predictions(request):
             'allows_score': phase_key != 'group_stage',
             'is_bettable': is_bettable,
             'is_complete': all_finished,
+            'is_combined': False,
+        })
+
+    # Combined Final & Third Place tab
+    combined_matches = Match.objects.filter(
+        phase__in=list(combined_keys)
+    ).select_related('home_team', 'away_team').order_by('kickoff')
+    if combined_matches.exists():
+        user_bets_combined = request.user.bets.filter(
+            match__phase__in=list(combined_keys)
+        ).select_related('match__home_team', 'match__away_team')
+        bet_map_combined = {b.match_id: b for b in user_bets_combined}
+        rows = []
+        for match in combined_matches:
+            bet = bet_map_combined.get(match.id)
+            pts = POINTS_BY_PHASE[match.phase]
+            rows.append({
+                'match': match,
+                'bet': bet,
+                'locked': now >= match.kickoff,
+                'phase_label': phase_label_map[match.phase],
+                'points_winner': pts[0],
+                'points_exact': pts[1],
+            })
+        is_bettable = combined_matches.filter(kickoff__gt=now).exists()
+        all_finished = not combined_matches.filter(finished=False).exists()
+        phases_data.append({
+            'key': 'final_stages',
+            'label': _('Final & Third Place'),
+            'rows': rows,
+            'points_winner': None,
+            'points_exact': None,
+            'allows_score': True,
+            'is_bettable': is_bettable,
+            'is_complete': all_finished,
+            'is_combined': True,
+            'third_place_pts': POINTS_BY_PHASE['third_place'],
+            'final_pts': POINTS_BY_PHASE['final'],
         })
 
     total_points = request.user.bets.aggregate(t=Sum('points_earned'))['t'] or 0

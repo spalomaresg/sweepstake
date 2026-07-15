@@ -26,9 +26,15 @@
 
   <!-- Scoring banner -->
   <div class="mb-4 px-5 py-3 rounded-xl bg-white/5 border border-white/10 flex flex-wrap gap-4 text-sm text-white/60 items-center">
-    <span class="font-semibold text-white/80">{{ phase.label }} {% trans "scoring:" %}</span>
-    <span>🎯 {% trans "Correct winner" %} = <strong class="text-emerald-400">{% blocktrans count points=phase.points_winner %}{{ points }} pt{% plural %}{{ points }} pts{% endblocktrans %}</strong></span>
-    {% if phase.points_exact %}<span>🔢 {% trans "Exact score" %} = <strong class="text-yellow-400">{{ phase.points_exact }} pts</strong></span>{% endif %}
+    {% if phase.is_combined %}
+      <span class="font-semibold text-white/80">{% trans "Scoring:" %}</span>
+      <span>🥉 {% trans "Third Place" %}: 🎯 <strong class="text-emerald-400">{{ phase.third_place_pts.0 }} pts</strong> · 🔢 <strong class="text-yellow-400">{{ phase.third_place_pts.1 }} pts</strong></span>
+      <span>🏆 {% trans "Final" %}: 🎯 <strong class="text-emerald-400">{{ phase.final_pts.0 }} pts</strong> · 🔢 <strong class="text-yellow-400">{{ phase.final_pts.1 }} pts</strong></span>
+    {% else %}
+      <span class="font-semibold text-white/80">{{ phase.label }} {% trans "scoring:" %}</span>
+      <span>🎯 {% trans "Correct winner" %} = <strong class="text-emerald-400">{% blocktrans count points=phase.points_winner %}{{ points }} pt{% plural %}{{ points }} pts{% endblocktrans %}</strong></span>
+      {% if phase.points_exact %}<span>🔢 {% trans "Exact score" %} = <strong class="text-yellow-400">{{ phase.points_exact }} pts</strong></span>{% endif %}
+    {% endif %}
     {% if not phase.is_bettable %}<span class="ml-auto text-white/30 text-xs italic">🔒 {% trans "Locked" %}</span>{% endif %}
   </div>
 
@@ -59,7 +65,8 @@
       <div class="flex items-start justify-between md:hidden">
         <div>
           <div class="kickoff-display text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
-          {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">{% blocktrans with letter=match.home_team.group %}Group {{ letter }}{% endblocktrans %}</div>{% endif %}
+          {% if phase.is_combined %}<div class="text-xs text-white/40 mt-0.5 font-semibold">{{ row.phase_label }}</div>
+          {% elif phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">{% blocktrans with letter=match.home_team.group %}Group {{ letter }}{% endblocktrans %}</div>{% endif %}
         </div>
         <div class="text-right pl-4">
           {% if match.finished %}
@@ -73,7 +80,8 @@
       <!-- Desktop-only: date column -->
       <div class="hidden md:block pt-1">
         <div class="kickoff-display text-sm font-mono text-white/50">{{ match.kickoff|date:"d M · H:i" }} UTC</div>
-        {% if phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">{% blocktrans with letter=match.home_team.group %}Group {{ letter }}{% endblocktrans %}</div>{% endif %}
+        {% if phase.is_combined %}<div class="text-xs text-white/40 mt-0.5 font-semibold">{{ row.phase_label }}</div>
+        {% elif phase.key == 'group_stage' and match.home_team.group %}<div class="text-xs text-white/30 mt-0.5">{% blocktrans with letter=match.home_team.group %}Group {{ letter }}{% endblocktrans %}</div>{% endif %}
       </div>
 
       <!-- Prediction -->
