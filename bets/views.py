@@ -275,6 +275,31 @@ def leaderboard(request):
             })
         team_ranking.sort(key=lambda x: x['average'], reverse=True)
 
+        # Bump chart: cumulative avg pts per phase → rank at each phase
+        bump_chart_data = None
+        if ordered_phases and team_ranking:
+            n_ph = len(ordered_phases)
+            chart_teams = []
+            for row in team_ranking:
+                cum, pts = 0, []
+                for pk, _ in ordered_phases:
+                    cum = round(cum + row['phase_points'].get(pk, 0), 2)
+                    pts.append(cum)
+                chart_teams.append({
+                    'name': row['team'].name, 'color': row['team'].color,
+                    'pts': pts, 'ranks': [0] * n_ph,
+                })
+            for i in range(n_ph):
+                for rank, ct in enumerate(
+                    sorted(chart_teams, key=lambda c: c['pts'][i], reverse=True), 1
+                ):
+                    ct['ranks'][i] = rank
+            bump_chart_data = json.dumps({
+                'phases': [{'key': k, 'label': str(lbl)} for k, lbl in ordered_phases],
+                'teams': [{'name': c['name'], 'color': c['color'],
+                           'pts': c['pts'], 'ranks': c['ranks']} for c in chart_teams],
+            })
+
         has_sweepstake_teams = teams.exists()
         show_teams_tab = has_sweepstake_teams and memberships.filter(team__isnull=False).exists()
 
@@ -284,6 +309,7 @@ def leaderboard(request):
             'team_ranking': team_ranking,
             'has_sweepstake_teams': has_sweepstake_teams,
             'show_teams_tab': show_teams_tab,
+            'bump_chart_data': bump_chart_data,
         })
 
     return render(request, 'bets/leaderboard.html', {
