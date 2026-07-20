@@ -223,11 +223,14 @@ def logout_view(request):
 
 
 def _points_by_phase_for_user(user):
-    return {
-        phase_key: user.bets.filter(match__phase=phase_key).aggregate(
-            t=Sum('points_earned'))['t'] or 0
-        for phase_key, _ in PHASE_CHOICES
-    }
+    result = {}
+    for phase_key, _ in PHASE_CHOICES:
+        qs = user.bets.filter(match__phase=phase_key)
+        if qs.exists():
+            result[phase_key] = qs.aggregate(t=Sum('points_earned'))['t'] or 0
+        else:
+            result[phase_key] = None
+    return result
 
 
 @login_required
@@ -254,7 +257,7 @@ def leaderboard(request):
         individual_ranking = []
         for membership in memberships:
             phase_pts = _points_by_phase_for_user(membership.user)
-            total = sum(phase_pts.values())
+            total = sum(v for v in phase_pts.values() if v is not None)
             individual_ranking.append({
                 'membership': membership,
                 'total': total,

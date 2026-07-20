@@ -12,3 +12,12 @@ def getitem(d, key):
             return d[int(key)]
         except (KeyError, TypeError, ValueError):
             return 0
+
+@register.filter
+def is_none(value):
+    return value is None
+
+@register.filter
+def pts_display(value):
+    """Render None (no bet) as em dash; integers pass through unchanged."""
+    return '—' if value is None else value
